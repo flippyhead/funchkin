@@ -1,0 +1,54 @@
+#include "arduino.ceu"
+
+native do
+  ##include <SoftwareSerial.h>
+  Serial.begin(9600);
+end
+
+// par do
+//   #include "compass.ceu"
+// with
+//   #include "gps.ceu"
+// with
+//   #include "funchkin.ceu"
+//   var Funchkin me;
+// end
+
+par do
+  #include "gps.ceu"
+with
+  #include "compass.ceu"
+with
+  #include "radio.ceu"
+with
+  loop do
+    // receive new radio message: (friendId, latitude, longitude)
+    // if new friend, add to friends list
+    // update friend in list with new data
+  end
+with
+  loop do
+    var float heading;
+    heading = await COMPASS_HEADING;
+
+    _Serial.print("\nCompass: ");
+    _Serial.println(heading);
+
+    // for each friend,
+    //    calculate distance
+    //    calculate heading
+
+  end
+with
+  loop do
+    var float latitude, longitude;
+    (latitude, longitude) = await GPS;
+
+    _Serial.print("\nGPS: ");
+    _Serial.print(latitude, 4); _Serial.print(", ");
+    _Serial.println(longitude, 4);
+
+    // for each friend
+    //    transmit my friendId, latitude and longitude
+  end
+end

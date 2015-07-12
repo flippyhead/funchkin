@@ -1,0 +1,21 @@
+native _radioBegin();
+
+input (int, float, float) RADIO_RX; // latitude, longitude
+
+native do
+  void radioBegin() {
+    Serial.println("Radio start.");
+  }
+end
+
+_radioBegin();
+
+// loop do
+//   radio stuff
+
+//   async do
+//     emit RADIO_RX => x, y, z;
+//   end
+
+//   await 2s;
+// end
