@@ -1,18 +1,58 @@
 #include "arduino.ceu"
+#include "funchkin.ceu"
+#include "course.ceu"
+
+#define MAX_FRIENDS 1
+
+
+// My location and heading
+var float latitude, longitude;
+var int heading;
 
 native do
-  ##include <SoftwareSerial.h>
-  Serial.begin(9600);
+  struct Funchkin friends[MAX_FRIENDS];
+
+  void createFriends() {
+    friends[0].id = 1;
+    friends[0].latitude = 45.2591;
+    friends[0].longitude = -111.2546;
+    friends[0].heading = 123;
+  }
+
+  void updateFriend(int id, float latitude, float longitude, int heading) {
+    for (int i = 0; i < MAX_FRIENDS; i++) {
+      if (friends[i].id == id) {
+        Serial.print("\nUpdating friends.");
+        friends[i].latitude = latitude;
+        friends[i].longitude = longitude;
+        friends[i].heading = heading;
+      }
+    }
+  }
+
+  void updateCourses(float latitude, float longitude) {
+    for (int i = 0; i < MAX_FRIENDS; i++) {
+      int bearing = calculateBearing(friends[i].latitude, friends[i].longitude, latitude, longitude);
+      int distance = calculateDistance(friends[i].latitude, friends[i].longitude, latitude, longitude);
+      friends[i].bearing = bearing;
+      friends[i].distance = distance;
+
+      Serial.print("\nUpdating course:");
+      Serial.print(bearing); Serial.print("degrees, ");
+      Serial.print(distance); Serial.println(" miles");
+    }
+  }
+
+  void updateDirections(int heading) {
+    for (int i = 0; i < MAX_FRIENDS; i++) {
+      int direction = calculateDirection(friends[i].bearing, heading);
+      friends[i].direction = direction;
+    }
+  }
+
 end
 
-// par do
-//   #include "compass.ceu"
-// with
-//   #include "gps.ceu"
-// with
-//   #include "funchkin.ceu"
-//   var Funchkin me;
-// end
+_createFriends();
 
 par do
   #include "gps.ceu"
@@ -22,33 +62,27 @@ with
   #include "radio.ceu"
 with
   loop do
-    // receive new radio message: (friendId, latitude, longitude)
-    // if new friend, add to friends list
-    // update friend in list with new data
+    var int id, heading;
+    var float latitude, longitude;
+    (id, latitude, longitude, heading) = await RADIO_RX;
+
+    _updateFriend(id, latitude, longitude, heading);
   end
 with
   loop do
-    var float heading;
     heading = await COMPASS_HEADING;
-
+    _updateDirections(heading);
     _Serial.print("\nCompass: ");
     _Serial.println(heading);
 
-    // for each friend,
-    //    calculate distance
-    //    calculate heading
-
   end
 with
   loop do
-    var float latitude, longitude;
     (latitude, longitude) = await GPS;
+    _updateCourses(latitude, longitude);
 
     _Serial.print("\nGPS: ");
     _Serial.print(latitude, 4); _Serial.print(", ");
     _Serial.println(longitude, 4);
-
-    // for each friend
-    //    transmit my friendId, latitude and longitude
   end
 end

@@ -1,0 +1,68 @@
+
+
+native do
+  const float pi = 3.14159265;
+  const int radiusOfEarth = 6371; // in km
+  const float kilometersPerMile = 0.621371192;
+  const int tolerance = 15; // degrees
+
+  int calculateDirection(int bearing, int heading) {
+    int difference = (360 + (((int) heading - (int) bearing)) % 360) % 360;
+
+    if (345 > difference && difference < 15) {
+      return 0;
+    } else if (difference >= 180) {
+      return -1;
+    } else {
+      return 1;
+    }
+  }
+
+  int calculateBearing(float wayPointLatitude, float wayPointLongitude, float latitude, float longitude) {
+
+    // float deltaLatitudeRadians = (wayPointLatitude - latitude) * pi / 180;
+    float deltaLongitudeRadians = (wayPointLongitude - longitude)* pi / 180;
+
+    float latitudeRadians = latitude * pi / 180;
+    float wayPointLatitudeRadians = wayPointLatitude * pi / 180;
+
+    // float longitudeRadians = longitude * pi / 180;
+    // float wayPointLongitudeRadians = wayPointLongitude * pi / 180;
+
+    float y = sin(deltaLongitudeRadians) * cos(wayPointLatitudeRadians);
+
+    float x = cos(latitudeRadians) * sin(wayPointLatitudeRadians) -
+      sin(latitudeRadians) * cos(wayPointLatitudeRadians) * cos(deltaLongitudeRadians);
+
+    int bearing = atan2(y, x) / pi * 180;
+
+    if (bearing < 0) {
+      bearing = 360 + bearing;
+    }
+
+    return bearing;
+  }
+
+  int calculateDistance(float wayPointLatitude, float wayPointLongitude, float latitude, float longitude) {
+
+    float deltaLatitudeRadians = (wayPointLatitude - latitude) * pi / 180;
+    float deltaLongitudeRadians = (wayPointLongitude - longitude)* pi / 180;
+
+    float latitudeRadians = latitude * pi / 180;
+    float wayPointLatitudeRadians = wayPointLatitude * pi / 180;
+
+    // float longitudeRadians = longitude * pi / 180;
+    // float wayPointLongitudeRadians = wayPointLongitude * pi / 180;
+
+    float a = sin(deltaLatitudeRadians/2) * sin(deltaLatitudeRadians/2) +
+      sin(deltaLongitudeRadians/2) * sin(deltaLongitudeRadians/2) *
+      cos(latitudeRadians) * cos(wayPointLatitudeRadians);
+
+    float c = 2 * atan2(sqrt(a), sqrt(1-a));
+    float d = radiusOfEarth * c; // distance in kilometers
+
+    return d * kilometersPerMile; // distance in miles
+  }
+
+
+end

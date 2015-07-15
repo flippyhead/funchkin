@@ -1,17 +1,11 @@
-class Funchkin with
-  var float latitude, longitude;
-  var int heading;
-do
-  par do
-    every heading in COMPASS_HEADING do
-      _Serial.print("\nCompass: ");
-      _Serial.println(heading);
-    end
-  with
-    every (latitude, longitude) in GPS do
-      _Serial.print("\nGPS: ");
-      _Serial.print(latitude, 4); _Serial.print(", ");
-      _Serial.println(longitude, 4);
-    end
-  end
+native do
+  struct Funchkin {
+    // absolute
+    float latitude, longitude;
+    int id, heading;
+
+    // relative to self
+    float distance;
+    int bearing, direction;
+  };
 end

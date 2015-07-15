@@ -1,4 +1,4 @@
-native _begin();
+native _gpsBegin();
 
 input (float, float) GPS; // latitude, longitude
 
@@ -8,7 +8,7 @@ native do
   SoftwareSerial my_Serial(8, 7);
   Adafruit_GPS GPS(&my_Serial);
 
-  void begin() {
+  void gpsBegin() {
     Serial.begin(9600);
     Serial.println("GPS start.");
 
@@ -19,7 +19,7 @@ native do
   }
 end
 
-_begin();
+_gpsBegin();
 
 loop do
   _GPS.read();

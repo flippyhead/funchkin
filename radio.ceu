@@ -1,6 +1,6 @@
 native _radioBegin();
 
-input (int, float, float) RADIO_RX; // latitude, longitude
+input (int, float, float, int) RADIO_RX; // id, latitude, longitude, heading
 
 native do
   void radioBegin() {
