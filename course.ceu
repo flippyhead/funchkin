@@ -2,35 +2,33 @@
 
 native do
   const float pi = 3.14159265;
-  const int radiusOfEarth = 6371; // in km
+  const int radiusOfEarth = 6371.0; // in km
   const float kilometersPerMile = 0.621371192;
   const int tolerance = 15; // degrees
 
   int calculateDirection(int bearing, int heading) {
     int difference = (360 + (((int) heading - (int) bearing)) % 360) % 360;
 
-    if (345 > difference && difference < 15) {
-      return 0;
+    // Serial.print("\nDIFFERENCE: ");
+    // Serial.println(difference);
+
+    if (difference > 345 || difference < 15) {
+      return 0; // forward
+    } else if (difference > 165 && difference < 195) {
+      return -2; // behind
     } else if (difference >= 180) {
-      return -1;
+      return -1; // right
     } else {
-      return 1;
+      return 1; // left
     }
   }
 
   int calculateBearing(float wayPointLatitude, float wayPointLongitude, float latitude, float longitude) {
-
-    // float deltaLatitudeRadians = (wayPointLatitude - latitude) * pi / 180;
     float deltaLongitudeRadians = (wayPointLongitude - longitude)* pi / 180;
-
     float latitudeRadians = latitude * pi / 180;
     float wayPointLatitudeRadians = wayPointLatitude * pi / 180;
 
-    // float longitudeRadians = longitude * pi / 180;
-    // float wayPointLongitudeRadians = wayPointLongitude * pi / 180;
-
     float y = sin(deltaLongitudeRadians) * cos(wayPointLatitudeRadians);
-
     float x = cos(latitudeRadians) * sin(wayPointLatitudeRadians) -
       sin(latitudeRadians) * cos(wayPointLatitudeRadians) * cos(deltaLongitudeRadians);
 
@@ -44,15 +42,11 @@ native do
   }
 
   int calculateDistance(float wayPointLatitude, float wayPointLongitude, float latitude, float longitude) {
-
     float deltaLatitudeRadians = (wayPointLatitude - latitude) * pi / 180;
     float deltaLongitudeRadians = (wayPointLongitude - longitude)* pi / 180;
 
     float latitudeRadians = latitude * pi / 180;
     float wayPointLatitudeRadians = wayPointLatitude * pi / 180;
-
-    // float longitudeRadians = longitude * pi / 180;
-    // float wayPointLongitudeRadians = wayPointLongitude * pi / 180;
 
     float a = sin(deltaLatitudeRadians/2) * sin(deltaLatitudeRadians/2) +
       sin(deltaLongitudeRadians/2) * sin(deltaLongitudeRadians/2) *

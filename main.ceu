@@ -19,10 +19,30 @@ native do
     friends[0].heading = 123;
   }
 
+  char direction(int dir) {
+    if (dir == 0) {
+      return 'F';
+    } else if (dir == -2) {
+      return 'B';
+    } else if (dir == -1) {
+      return 'R';
+    } else if (dir == 1) {
+      return 'L';
+    }
+  }
+
+  void logFriends() {
+    for (int i = 0; i < MAX_FRIENDS; i++) {
+      Serial.print("\nFriend "); Serial.print(friends[i].id); Serial.println(":");
+      Serial.print("direction: "); Serial.println(direction(friends[i].direction));
+      Serial.print("bearing: "); Serial.println(friends[i].bearing);
+      Serial.print("distance: "); Serial.println(friends[i].distance, 6);
+    }
+  }
+
   void updateFriend(int id, float latitude, float longitude, int heading) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
       if (friends[i].id == id) {
-        Serial.print("\nUpdating friends.");
         friends[i].latitude = latitude;
         friends[i].longitude = longitude;
         friends[i].heading = heading;
@@ -36,10 +56,6 @@ native do
       int distance = calculateDistance(friends[i].latitude, friends[i].longitude, latitude, longitude);
       friends[i].bearing = bearing;
       friends[i].distance = distance;
-
-      Serial.print("\nUpdating course:");
-      Serial.print(bearing); Serial.print("degrees, ");
-      Serial.print(distance); Serial.println(" miles");
     }
   }
 
@@ -72,8 +88,9 @@ with
   loop do
     heading = await COMPASS_HEADING;
     _updateDirections(heading);
-    _Serial.print("\nCompass: ");
-    _Serial.println(heading);
+
+    // _Serial.print("\nMy Heading: ");
+    // _Serial.println(heading);
 
   end
 with
@@ -84,5 +101,10 @@ with
     _Serial.print("\nGPS: ");
     _Serial.print(latitude, 4); _Serial.print(", ");
     _Serial.println(longitude, 4);
+  end
+with
+  loop do
+    _logFriends();
+    await 5s;
   end
 end

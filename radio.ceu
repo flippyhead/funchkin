@@ -10,12 +10,15 @@ end
 
 _radioBegin();
 
-// loop do
-//   radio stuff
+loop do
+  // radio stuff
 
-//   async do
-//     emit RADIO_RX => x, y, z;
-//   end
+  async do
+    var int id, heading;
+    var float latitude, longitude;
 
-//   await 2s;
-// end
+    emit RADIO_RX => (id, latitude, longitude, heading);
+  end
+
+  await 10s;
+end
