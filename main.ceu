@@ -14,8 +14,8 @@ native do
 
   void createFriends() {
     friends[0].id = 1;
-    friends[0].latitude = 45.2591;
-    friends[0].longitude = -111.2546;
+    friends[0].latitude =    47.613451;
+    friends[0].longitude = -122.308730;
     friends[0].heading = 123;
   }
 
@@ -31,12 +31,18 @@ native do
     }
   }
 
+  void logMe(int heading) {
+    Serial.println("-----------");
+    Serial.print("My heading:"); Serial.println(heading);
+  }
+
   void logFriends() {
     for (int i = 0; i < MAX_FRIENDS; i++) {
+      Serial.println("-----------");
       Serial.print("\nFriend "); Serial.print(friends[i].id); Serial.println(":");
       Serial.print("direction: "); Serial.println(direction(friends[i].direction));
       Serial.print("bearing: "); Serial.println(friends[i].bearing);
-      Serial.print("distance: "); Serial.println(friends[i].distance, 6);
+      Serial.print("distance: "); Serial.println(scaledDistance(friends[i].distance, 'F'));
     }
   }
 
@@ -53,7 +59,7 @@ native do
   void updateCourses(float latitude, float longitude) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
       int bearing = calculateBearing(friends[i].latitude, friends[i].longitude, latitude, longitude);
-      int distance = calculateDistance(friends[i].latitude, friends[i].longitude, latitude, longitude);
+      float distance = calculateDistance(friends[i].latitude, friends[i].longitude, latitude, longitude);
       friends[i].bearing = bearing;
       friends[i].distance = distance;
     }
@@ -98,13 +104,13 @@ with
     (latitude, longitude) = await GPS;
     _updateCourses(latitude, longitude);
 
-    _Serial.print("\nGPS: ");
-    _Serial.print(latitude, 4); _Serial.print(", ");
-    _Serial.println(longitude, 4);
+    // _Serial.print("\nMy GPS: ");
+    // _Serial.print(latitude, 6); _Serial.print(", ");
+    // _Serial.println(longitude, 6);
   end
 with
   loop do
     _logFriends();
-    await 5s;
+    await 2s;
   end
 end

@@ -18,6 +18,10 @@ native do
     compass.m_max = (LSM303::vector<int16_t>){+32767, +32767, +32767};
   }
 
+  // void calibrateCompass() {
+  //   LSM303::vector<int16_t> running_min = {32767, 32767, 32767}, running_max = {-32768, -32768, -32768};
+  // }
+
 end
 
 _compassBegin();

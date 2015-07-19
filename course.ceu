@@ -1,25 +1,23 @@
 
 
 native do
-  const float pi = 3.14159265;
+  const float pi = 3.14159265358979323846;
   const int radiusOfEarth = 6371.0; // in km
   const float kilometersPerMile = 0.621371192;
   const int tolerance = 15; // degrees
 
   int calculateDirection(int bearing, int heading) {
-    int difference = (360 + (((int) heading - (int) bearing)) % 360) % 360;
-
-    // Serial.print("\nDIFFERENCE: ");
-    // Serial.println(difference);
+    if (heading < bearing) heading += 360;  // denormalize
+    int difference = heading - bearing; // calculate left turn, will allways be 0..359
 
     if (difference > 345 || difference < 15) {
       return 0; // forward
     } else if (difference > 165 && difference < 195) {
       return -2; // behind
-    } else if (difference >= 180) {
-      return -1; // right
-    } else {
+    } else if (difference < 180) {
       return 1; // left
+    } else {
+      return -1; // right
     }
   }
 
@@ -41,7 +39,7 @@ native do
     return bearing;
   }
 
-  int calculateDistance(float wayPointLatitude, float wayPointLongitude, float latitude, float longitude) {
+  float calculateDistance(float wayPointLatitude, float wayPointLongitude, float latitude, float longitude) {
     float deltaLatitudeRadians = (wayPointLatitude - latitude) * pi / 180;
     float deltaLongitudeRadians = (wayPointLongitude - longitude)* pi / 180;
 
@@ -54,9 +52,18 @@ native do
 
     float c = 2 * atan2(sqrt(a), sqrt(1-a));
     float d = radiusOfEarth * c; // distance in kilometers
-
     return d * kilometersPerMile; // distance in miles
   }
 
+  float scaledDistance(float distance, char unit) {
+    switch(unit) {
+      case 'M':
+        break;
+      case 'F':
+        distance = distance * 5280;
+        break;
+    }
+    return distance;
+  }
 
 end
