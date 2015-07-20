@@ -4,19 +4,25 @@
 
 #define MAX_FRIENDS 1
 
-
 // My location and heading
 var float latitude, longitude;
 var int heading;
 
 native do
+  ##include "SoftwareSerial.h"
+
   struct Funchkin friends[MAX_FRIENDS];
+
+  void begin() {
+    Serial.begin(9600);
+    Serial.println("Main start.");
+  }
 
   void createFriends() {
     friends[0].id = 1;
-    friends[0].latitude =    47.613451;
-    friends[0].longitude = -122.308730;
-    friends[0].heading = 123;
+    friends[0].latitude =  0.0;
+    friends[0].longitude = 0.0;
+    friends[0].heading = 0;
   }
 
   char direction(int dir) {
@@ -74,19 +80,24 @@ native do
 
 end
 
+_begin();
 _createFriends();
 
 par do
-  #include "gps.ceu"
-with
   #include "compass.ceu"
 with
   #include "radio.ceu"
+with
+  #include "gps.ceu"
 with
   loop do
     var int id, heading;
     var float latitude, longitude;
     (id, latitude, longitude, heading) = await RADIO_RX;
+
+    _Serial.print("\nRX: ");
+    _Serial.print(latitude, 6); _Serial.print(", ");
+    _Serial.println(longitude, 6);
 
     _updateFriend(id, latitude, longitude, heading);
   end
@@ -94,22 +105,15 @@ with
   loop do
     heading = await COMPASS_HEADING;
     _updateDirections(heading);
-
-    // _Serial.print("\nMy Heading: ");
-    // _Serial.println(heading);
-
   end
 with
   loop do
     (latitude, longitude) = await GPS;
     _updateCourses(latitude, longitude);
-
-    // _Serial.print("\nMy GPS: ");
-    // _Serial.print(latitude, 6); _Serial.print(", ");
-    // _Serial.println(longitude, 6);
   end
 with
   loop do
+    _logMe(heading);
     _logFriends();
     await 2s;
   end

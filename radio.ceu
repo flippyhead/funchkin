@@ -3,21 +3,32 @@ native _radioBegin();
 input (int, float, float, int) RADIO_RX; // id, latitude, longitude, heading
 
 native do
+  SoftwareSerial xbee(2, 3);
+
   void radioBegin() {
     Serial.println("Radio start.");
+    xbee.begin(9600);
   }
 end
 
 _radioBegin();
 
 loop do
-  // radio stuff
 
   async do
     var int id, heading;
     var float latitude, longitude;
 
+    id = 1;
+    latitude =    47.613451;
+    longitude = -122.308730;
+    heading = 123;
+
     emit RADIO_RX => (id, latitude, longitude, heading);
+
+    if _Serial.available() then
+      _XBee.write('xxx');
+    end
   end
 
   await 10s;
