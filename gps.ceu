@@ -32,5 +32,7 @@ loop do
       end
     end
 
+  else
+    await 3s;
   end
 end
