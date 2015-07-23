@@ -1,5 +1,8 @@
 native _radioBegin();
 
+#define RADIO_RX_LATITUDE 1
+#define RADIO_RX_LONGITUDE 2
+
 input (int, float, float, int) RADIO_RX; // id, latitude, longitude, heading
 input (int, float, float, int) RADIO_TX; // id, latitude, longitude, heading
 
@@ -13,8 +16,6 @@ native do
   ZBRxResponse rx = ZBRxResponse();
   ModemStatusResponse msr = ModemStatusResponse();
 
-  uint8_t data = 0;
-
   void radioBegin() {
     Serial.println("Radio start.");
     serial.begin(9600);
@@ -26,12 +27,20 @@ native do
       xbee.getResponse().getApiId() == ZB_RX_RESPONSE;
   }
 
-  // void radioTransmit() {
-  //   uint8_t payload[] = { 0, 0 };
-  //   Tx64Request tx = Tx64Request(0x40A5A01F, payload, sizeof(payload));
-  //   xbee.send(tx);
-  // }
+  String radioParseRxPayload() {
+    String inData;
+    char received;
 
+    for (int i = 0; i < rx.getDataLength(); i++) {
+      received = rx.getData()[i];
+
+      if (received == '\n') {
+        return inData;
+      } else {
+        inData += received;
+      }
+    }
+  }
 end
 
 _radioBegin();
@@ -42,43 +51,23 @@ loop do
   if _radioHasNewData() then
     _xbee.getResponse().getZBRxResponse(_rx);
 
-    // if _rx.getOption() == _ZB_PACKET_ACKNOWLEDGED then
-    //   _Serial.println("AKNOWLEDGED");
-    // else/if _rx.getOption() == _ZB_BROADCAST_PACKET then
-    //   _Serial.println("BROADCAST");
-    // end
+    _Serial.println(_radioParseRxPayload());
 
-    // _Serial.print("checksum is ");
-    // _Serial.println(_rx.getChecksum(), _HEX);
-
-    // _Serial.print("packet length is ");
-    // _Serial.println(_rx.getPacketLength(), _DEC);
-
-    var char[] string;
-
-    _Serial.print("RX Message:");
-    loop i in _rx.getDataLength() do
-      string[i] = _Serial.write(_rx.getData()[i]);
+    async do
+      // ** use _radioParseRxPayload() to extract:
+      // var int id, heading;
+      // var float latitude, longitude;
+      // ** For example:
+      // id = 1;
+      // latitude =    47.613451;
+      // longitude = -122.308730;
+      // heading = 123;
+      // ** get the data sent out via radio
+      // emit RADIO_RX => (id, latitude, longitude, heading);
     end
-    _Serial.println("");
 
-    // _Serial.print("RX Frame:");
-    // loop i in _xbee.getResponse().getFrameDataLength() do
-    //   _Serial.write(_xbee.getResponse().getFrameData()[i]);
-    // end
-    // _Serial.println("");
-    // async do
-    //   var int id, heading;
-    //   var float latitude, longitude;
-    //   // id = 1;
-    //   // latitude =    47.613451;
-    //   // longitude = -122.308730;
-    //   // heading = 123;
-
-    //   emit RADIO_RX => (id, latitude, longitude, heading);
-    // end
   else/if _xbee.getResponse().isError() then
-    _Serial.print("RX Error reading packet:");
+    _Serial.print("[radio] error reading packet: ");
     _Serial.println(_xbee.getResponse().getErrorCode());
   else
     // nothing / other errpr
