@@ -1,0 +1,25 @@
+native _displayBegin();
+
+#define DISPLAY_PIN 6
+#define DISPLAY_NUMPIXELS 16
+
+native do
+  ##include <Adafruit_NeoPixel.h>
+
+  Adafruit_NeoPixel display = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+  void displayBegin() {
+    Serial.println("Display start.");
+    display.begin();
+  }
+end
+
+_displayBegin();
+
+loop do
+  loop i in DISPLAY_NUMPIXELS do
+    _dispaly.setPixelColor(i, pixels.Color(0,150,0)); // Moderately bright green color.
+    _dispaly.show();
+    await 500ms;
+  end
+end

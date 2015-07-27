@@ -10,7 +10,7 @@ var float latitude, longitude;
 var int heading;
 
 native do
-  ##include "SoftwareSerial.h"
+  ##include <SoftwareSerial.h>
 
   struct Funchkin friends[MAX_FRIENDS];
 
@@ -47,9 +47,10 @@ native do
     for (int i = 0; i < MAX_FRIENDS; i++) {
       Serial.println("-----------");
       Serial.print("\nFriend "); Serial.print(friends[i].id); Serial.println(":");
+      Serial.print("loc: "); Serial.print(friends[i].latitude, 6); Serial.print(", "); Serial.println(friends[i].longitude, 6);
       Serial.print("direction: "); Serial.println(direction(friends[i].direction));
       Serial.print("bearing: "); Serial.println(friends[i].bearing);
-      Serial.print("distance: "); Serial.println(scaledDistance(friends[i].distance, 'F'));
+      Serial.print("distance: "); Serial.println(friends[i].distance);
     }
   }
 
@@ -115,7 +116,7 @@ with
   end
 with
   loop do
-    await 2s;
+    await 1s;
 
     _logMe(heading);
     _logFriends();

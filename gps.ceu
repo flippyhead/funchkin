@@ -3,36 +3,114 @@ native _gpsBegin();
 input (float, float) GPS; // latitude, longitude
 
 native do
-  ##include <Adafruit_GPS.h>
+  SoftwareSerial gpsSerial(8, 7);
+  TinyGPS gps;
 
-  SoftwareSerial gps(8, 7);
-  Adafruit_GPS GPS(&gps);
+  float latitude, longitude;
+  unsigned long age;
+
+  char xbuf[100];
+  int index = 0;
 
   void gpsBegin() {
     Serial.println("GPS start.");
+    gpsSerial.begin(9600);
+  }
 
-    GPS.begin(9600);
-    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
-    GPS.sendCommand(PGCMD_ANTENNA);
+  void log(long latitude, long longitude) {
+    Serial.print("LAT=");
+    Serial.print(latitude == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : latitude, 6);
+    Serial.print(" LON=");
+    Serial.print(longitude == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : longitude, 6);
+    Serial.print(" SAT=");
+    Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+    Serial.print(" PREC=");
+    Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
+  }
+
+  bool gpsisdigit(char c) {
+    return c >= '0' && c <= '9';
+  }
+
+  long gpsatol(const char *str) {
+    long ret = 0;
+    while (gpsisdigit(*str))
+      ret = 10 * ret + *str++ - '0';
+    return ret;
+  }
+
+  unsigned long parse_degrees(char *_term) {
+    char *p;
+    unsigned long left_of_decimal = gpsatol(_term);
+    unsigned long hundred1000ths_of_minute = (left_of_decimal % 100UL) * 100000UL;
+    for (p=_term; gpsisdigit(*p); ++p);
+    if (*p == '.')
+    {
+      unsigned long mult = 10000;
+      while (gpsisdigit(*++p))
+      {
+        hundred1000ths_of_minute += mult * (*p - '0');
+        mult /= 10;
+      }
+    }
+    return (left_of_decimal / 100) * 1000000 + (hundred1000ths_of_minute + 3) / 6;
   }
 end
 
 _gpsBegin();
 
-loop do
-  _GPS.read();
+par do
+  loop do
+    if _gpsSerial.available() == 0 then
+      await 1s;
+    else
+      var int c = _gpsSerial.read();
+      _xbuf[_index] = c;
+      _index = _index + 1;
+      _gps.encode(c);
 
-  if _GPS.newNMEAreceived() and _GPS.parse(_GPS.lastNMEA()) then
-    await 2s;
-
-    if _GPS.fix then
-      async do
-        emit GPS => (_GPS.latitudeDegrees, _GPS.longitudeDegrees);
+      if c == '\n' then
+        _xbuf[_index] = '\0';
+        _index = 0;
+        // emit RADIO_TX => (1, _xbuf);
       end
     end
+  end
+with
+  loop do
+    _gps.f_get_position(&_latitude, &_longitude, &_age);
 
-  else
-    await 3s;
+    // _log(_latitude, _longitude);
+
+    async do
+      emit GPS => (_latitude, _longitude);
+    end
+    await 2s;
   end
 end
+
+// loop do
+//   loop do
+//     if _gpsSerial.available() then
+//       _gps.encode(_gpsSerial.read());
+//     else
+//       break;
+//     end
+//   end
+
+//   await 2s;
+//   // _GPS.read();
+
+//   // if _GPS.newNMEAreceived() and _GPS.parse(_GPS.lastNMEA()) then
+//   //   await 2s;
+
+//   //   if _GPS.fix then
+//   //     async do
+//   //       emit GPS => (_GPS.latitudeDegrees, _GPS.longitudeDegrees);
+//   //     end
+//   //   end
+
+//   // else
+//   //   await 3s;
+//   // end
+// end

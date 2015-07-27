@@ -17,11 +17,6 @@ native do
     compass.m_min = (LSM303::vector<int16_t>){-32767, -32767, -32767};
     compass.m_max = (LSM303::vector<int16_t>){+32767, +32767, +32767};
   }
-
-  // void calibrateCompass() {
-  //   LSM303::vector<int16_t> running_min = {32767, 32767, 32767}, running_max = {-32768, -32768, -32768};
-  // }
-
 end
 
 _compassBegin();
@@ -30,9 +25,9 @@ loop do
   _compass.read();
 
   async do
-    var float heading = _compass.heading();
+    var int heading = _compass.heading();
     emit COMPASS_HEADING => heading;
   end
 
-  await 2s;
+  await 1s;
 end

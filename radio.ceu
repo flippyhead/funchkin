@@ -1,25 +1,69 @@
 native _radioBegin();
 
-#define RADIO_RX_LATITUDE 1
-#define RADIO_RX_LONGITUDE 2
-
 input (int, float, float, int) RADIO_RX; // id, latitude, longitude, heading
 input (int, float, float, int) RADIO_TX; // id, latitude, longitude, heading
 
 native do
   ##include <XBee.h>
+  #include "lib/SerialCommand.cpp"
 
-  SoftwareSerial serial(2, 3);
+  SerialCommand serialCommand;
+  SoftwareSerial xbeeSerial(2, 3);
   XBee xbee = XBee();
 
   XBeeResponse response = XBeeResponse();
   ZBRxResponse rx = ZBRxResponse();
   ModemStatusResponse msr = ModemStatusResponse();
+  char rxData[48];
+  int rxID, rxHeading;
+  float rxLatitude, rxLongitude;
+
+  void radioCommandNotRecognized(const char *command) {
+    Serial.println("[radio] Command not recognized.");
+  }
+
+  void radioCommandUpdateLocation() {
+    char *arg, *token;
+    arg = serialCommand.next();
+    int part = 0;
+    float denom = 1000000.0;
+    if (arg == NULL) return;
+
+    while ((token = strsep(&arg, "|"))) {
+
+      switch (part) {
+        case 0:
+          rxID = atoi(token);
+          break;
+        case 1:
+          rxLatitude = (parse_degrees(token) / denom);
+          break;
+        case 2:
+          if (token[0] == 'S')
+            rxLatitude = -rxLatitude;
+          break;
+        case 3:
+          rxLongitude = (parse_degrees(token) / denom);
+          break;
+        case 4:
+          if (token[0] == 'W')
+            rxLongitude = -rxLongitude;
+          break;
+        case 5:
+          rxHeading = atoi(token);
+          break;
+      }
+      part = part + 1;
+    }
+  }
 
   void radioBegin() {
     Serial.println("Radio start.");
-    serial.begin(9600);
-    xbee.setSerial(serial);
+    xbeeSerial.begin(9600);
+    xbee.setSerial(xbeeSerial);
+
+    serialCommand.setDefaultHandler(radioCommandNotRecognized);
+    serialCommand.addCommand("LOC", radioCommandUpdateLocation);
   }
 
   bool radioHasNewData() {
@@ -27,51 +71,59 @@ native do
       xbee.getResponse().getApiId() == ZB_RX_RESPONSE;
   }
 
-  String radioParseRxPayload() {
+  void radioParseRxPayload(char buffer[]) {
     String inData;
     char received;
 
     for (int i = 0; i < rx.getDataLength(); i++) {
       received = rx.getData()[i];
-
-      if (received == '\n') {
-        return inData;
-      } else {
-        inData += received;
-      }
+      inData += received;
     }
+
+    inData.toCharArray(buffer, rx.getDataLength() + 1);
   }
+
 end
 
 _radioBegin();
 
-loop do
-  _xbee.readPacket();
+par do
+  loop do
+    _xbee.readPacket();
 
-  if _radioHasNewData() then
-    _xbee.getResponse().getZBRxResponse(_rx);
+    if _radioHasNewData() then
+      _xbee.getResponse().getZBRxResponse(_rx);
 
-    _Serial.println(_radioParseRxPayload());
+      _radioParseRxPayload(_rxData);
+      _serialCommand.readCommand(_rxData);
 
-    async do
-      // ** use _radioParseRxPayload() to extract:
-      // var int id, heading;
-      // var float latitude, longitude;
-      // ** For example:
-      // id = 1;
-      // latitude =    47.613451;
-      // longitude = -122.308730;
-      // heading = 123;
-      // ** get the data sent out via radio
-      // emit RADIO_RX => (id, latitude, longitude, heading);
+
+      _Serial.print("[radio] Funchkin ");
+      _Serial.print(_rxID);
+      _Serial.print(" received location: ");
+      _Serial.print(_rxLatitude, 6);
+      _Serial.print(", ");
+      _Serial.println(_rxLongitude, 6);
+
+      async do
+        emit RADIO_RX => (_rxID, _rxLatitude, _rxLongitude, _rxHeading);
+      end
+
+    else/if _xbee.getResponse().isError() then
+      _Serial.print("[radio] error reading packet: ");
+      _Serial.println(_xbee.getResponse().getErrorCode());
+    else
+      // nothing / other error
     end
 
-  else/if _xbee.getResponse().isError() then
-    _Serial.print("[radio] error reading packet: ");
-    _Serial.println(_xbee.getResponse().getErrorCode());
-  else
-    // nothing / other errpr
+    await 500ms;
   end
+with
+  loop do
+    // if rxId then
+    //   emit RADIO_RX => (rxId, latitude, longitude, heading);
+    // end
 
-  await 500ms;
+    await 10s;
+  end
 end
