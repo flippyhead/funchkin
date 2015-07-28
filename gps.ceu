@@ -1,6 +1,7 @@
 native _gpsBegin();
 
 input (float, float) GPS; // latitude, longitude
+event void gps_ready;
 
 native do
   SoftwareSerial gpsSerial(8, 7);
@@ -17,7 +18,7 @@ native do
     gpsSerial.begin(9600);
   }
 
-  void log(long latitude, long longitude) {
+  void log(float latitude, float longitude) {
     Serial.print("LAT=");
     Serial.print(latitude == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : latitude, 6);
     Serial.print(" LON=");
@@ -28,64 +29,29 @@ native do
     Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
   }
 
-  bool gpsisdigit(char c) {
-    return c >= '0' && c <= '9';
-  }
-
-  long gpsatol(const char *str) {
-    long ret = 0;
-    while (gpsisdigit(*str))
-      ret = 10 * ret + *str++ - '0';
-    return ret;
-  }
-
-  unsigned long parse_degrees(char *_term) {
-    char *p;
-    unsigned long left_of_decimal = gpsatol(_term);
-    unsigned long hundred1000ths_of_minute = (left_of_decimal % 100UL) * 100000UL;
-    for (p=_term; gpsisdigit(*p); ++p);
-    if (*p == '.')
-    {
-      unsigned long mult = 10000;
-      while (gpsisdigit(*++p))
-      {
-        hundred1000ths_of_minute += mult * (*p - '0');
-        mult /= 10;
-      }
-    }
-    return (left_of_decimal / 100) * 1000000 + (hundred1000ths_of_minute + 3) / 6;
-  }
-end
-
 _gpsBegin();
 
 par do
   loop do
     if _gpsSerial.available() == 0 then
-      await 1s;
+      await 100ms;
     else
-      var int c = _gpsSerial.read();
-      _xbuf[_index] = c;
-      _index = _index + 1;
-      _gps.encode(c);
-
-      if c == '\n' then
-        _xbuf[_index] = '\0';
-        _index = 0;
-        // emit RADIO_TX => (1, _xbuf);
+      if _gps.encode(_gpsSerial.read()) then
+        emit gps_ready;
       end
     end
   end
 with
   loop do
+    await gps_ready;
+
     _gps.f_get_position(&_latitude, &_longitude, &_age);
 
-    // _log(_latitude, _longitude);
+    _log(_latitude, _longitude);
 
     async do
       emit GPS => (_latitude, _longitude);
     end
-    await 2s;
   end
 end
 

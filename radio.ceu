@@ -29,27 +29,19 @@ native do
     float denom = 1000000.0;
     if (arg == NULL) return;
 
-    while ((token = strsep(&arg, "|"))) {
+    while ((token = strsep(&arg, ","))) {
 
       switch (part) {
         case 0:
           rxID = atoi(token);
           break;
         case 1:
-          rxLatitude = (parse_degrees(token) / denom);
+          rxLatitude = atol(token) / denom; //(parse_degrees(token) / denom);
           break;
         case 2:
-          if (token[0] == 'S')
-            rxLatitude = -rxLatitude;
+          rxLongitude = atol(token) / denom;
           break;
         case 3:
-          rxLongitude = (parse_degrees(token) / denom);
-          break;
-        case 4:
-          if (token[0] == 'W')
-            rxLongitude = -rxLongitude;
-          break;
-        case 5:
           rxHeading = atoi(token);
           break;
       }
@@ -97,7 +89,6 @@ par do
       _radioParseRxPayload(_rxData);
       _serialCommand.readCommand(_rxData);
 
-
       _Serial.print("[radio] Funchkin ");
       _Serial.print(_rxID);
       _Serial.print(" received location: ");
@@ -116,7 +107,7 @@ par do
       // nothing / other error
     end
 
-    await 500ms;
+    await 50ms;
   end
 with
   loop do

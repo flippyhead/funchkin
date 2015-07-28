@@ -38,9 +38,11 @@ native do
     }
   }
 
-  void logMe(int heading) {
-    Serial.println("-----------");
+  void logMe(float latitude, float longitude, int heading) {
+    Serial.println("**************");
     Serial.print("My heading:"); Serial.println(heading);
+    Serial.print("My loc:"); Serial.print(latitude, 6); Serial.print(", "); Serial.println(longitude, 6);
+    Serial.println("**************");
   }
 
   void logFriends() {
@@ -51,6 +53,7 @@ native do
       Serial.print("direction: "); Serial.println(direction(friends[i].direction));
       Serial.print("bearing: "); Serial.println(friends[i].bearing);
       Serial.print("distance: "); Serial.println(friends[i].distance);
+      Serial.println("-----------");
     }
   }
 
@@ -88,9 +91,9 @@ _createFriends();
 par do
   #include "compass.ceu"
 with
-  #include "gps.ceu"
-with
   #include "radio.ceu"
+with
+  #include "gps.ceu"
 with
   loop do
     var int fid, fheading;
@@ -116,9 +119,9 @@ with
   end
 with
   loop do
-    await 1s;
+    await 2s;
 
-    _logMe(heading);
+    _logMe(latitude, longitude, heading);
     _logFriends();
   end
 end
