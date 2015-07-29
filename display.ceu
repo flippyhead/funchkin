@@ -9,8 +9,8 @@ native do
   Adafruit_NeoPixel display = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
   void displayBegin() {
-    Serial.println("Display start.");
-    display.begin();
+    // Serial.println("Display start.");
+    // display.begin();
   }
 end
 

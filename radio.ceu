@@ -8,18 +8,39 @@ native do
   #include "lib/SerialCommand.cpp"
 
   SerialCommand serialCommand;
-  SoftwareSerial xbeeSerial(2, 3);
   XBee xbee = XBee();
 
   XBeeResponse response = XBeeResponse();
   ZBRxResponse rx = ZBRxResponse();
   ModemStatusResponse msr = ModemStatusResponse();
+  ZBTxStatusResponse txStatus = ZBTxStatusResponse();
+  XBeeAddress64 addr64 = XBeeAddress64(0x13A200, 0x40A5A01F); // SH + SL Address of receiving XBee
+
   char rxData[48];
   int rxID, rxHeading;
   float rxLatitude, rxLongitude;
 
+  void radioSendMessage(char message[]) {
+    ZBTxRequest zbTx = ZBTxRequest(addr64, (uint8_t *)message, strlen(message));
+    xbee.send(zbTx);
+  }
+
+  void radioSendMessage(String message, int number) {
+    String line = message + " " + number;
+    int length = line.length() + 1;
+    char buffer[length];
+    line.toCharArray(buffer, length);
+    radioSendMessage(buffer);
+  }
+
+  void xradioSendMessage(char message[], int num, ...) {
+    va_list valist;
+    char line[100];
+    sprintf(line, message, num, valist);
+  }
+
   void radioCommandNotRecognized(const char *command) {
-    Serial.println("[radio] Command not recognized.");
+    radioSendMessage("[radio] Command not recognized.");
   }
 
   void radioCommandUpdateLocation() {
@@ -50,12 +71,13 @@ native do
   }
 
   void radioBegin() {
-    Serial.println("Radio start.");
-    xbeeSerial.begin(9600);
-    xbee.setSerial(xbeeSerial);
+    Serial.begin(9600);
+    xbee.setSerial(Serial);
 
     serialCommand.setDefaultHandler(radioCommandNotRecognized);
     serialCommand.addCommand("LOC", radioCommandUpdateLocation);
+
+    radioSendMessage("GPS start.");
   }
 
   bool radioHasNewData() {
@@ -89,20 +111,14 @@ par do
       _radioParseRxPayload(_rxData);
       _serialCommand.readCommand(_rxData);
 
-      _Serial.print("[radio] Funchkin ");
-      _Serial.print(_rxID);
-      _Serial.print(" received location: ");
-      _Serial.print(_rxLatitude, 6);
-      _Serial.print(", ");
-      _Serial.println(_rxLongitude, 6);
+      _radioSendMessage("[radio] Funchkin received location: ", _rxLatitude);
 
       async do
         emit RADIO_RX => (_rxID, _rxLatitude, _rxLongitude, _rxHeading);
       end
 
     else/if _xbee.getResponse().isError() then
-      _Serial.print("[radio] error reading packet: ");
-      _Serial.println(_xbee.getResponse().getErrorCode());
+      _radioSendMessage("[radio] error reading packet: ", _xbee.getResponse().getErrorCode());
     else
       // nothing / other error
     end

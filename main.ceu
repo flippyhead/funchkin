@@ -14,11 +14,6 @@ native do
 
   struct Funchkin friends[MAX_FRIENDS];
 
-  void begin() {
-    Serial.begin(9600);
-    Serial.println("Main start.");
-  }
-
   void createFriends() {
     friends[0].id = 1;
     friends[0].latitude =  0.0;
@@ -35,25 +30,6 @@ native do
       return 'R';
     } else if (dir == 1) {
       return 'L';
-    }
-  }
-
-  void logMe(float latitude, float longitude, int heading) {
-    Serial.println("**************");
-    Serial.print("My heading:"); Serial.println(heading);
-    Serial.print("My loc:"); Serial.print(latitude, 6); Serial.print(", "); Serial.println(longitude, 6);
-    Serial.println("**************");
-  }
-
-  void logFriends() {
-    for (int i = 0; i < MAX_FRIENDS; i++) {
-      Serial.println("-----------");
-      Serial.print("\nFriend "); Serial.print(friends[i].id); Serial.println(":");
-      Serial.print("loc: "); Serial.print(friends[i].latitude, 6); Serial.print(", "); Serial.println(friends[i].longitude, 6);
-      Serial.print("direction: "); Serial.println(direction(friends[i].direction));
-      Serial.print("bearing: "); Serial.println(friends[i].bearing);
-      Serial.print("distance: "); Serial.println(friends[i].distance);
-      Serial.println("-----------");
     }
   }
 
@@ -85,7 +61,6 @@ native do
 
 end
 
-_begin();
 _createFriends();
 
 par do
@@ -119,9 +94,13 @@ with
   end
 with
   loop do
-    await 2s;
+    await 5s;
 
-    _logMe(latitude, longitude, heading);
-    _logFriends();
+    loop i in MAX_FRIENDS do
+      _radioSendMessage("Friend: ", _friends[i].id);
+      _radioSendMessage("Distance: ", _friends[i].distance);
+      _radioSendMessage("Bearing: ", _friends[i].bearing);
+      _radioSendMessage("Direction: ", _friends[i].direction);
+    end
   end
 end

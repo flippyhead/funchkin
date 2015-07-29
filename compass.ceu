@@ -9,8 +9,8 @@ native do
   LSM303 compass;
 
   void compassBegin() {
-    Serial.begin(9600);
-    Serial.println("Compass start.");
+    // Serial.begin(9600);
+    // Serial.println("Compass start.");
     Wire.begin();
     compass.init();
     compass.enableDefault();

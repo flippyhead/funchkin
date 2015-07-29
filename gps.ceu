@@ -14,20 +14,10 @@ native do
   int index = 0;
 
   void gpsBegin() {
-    Serial.println("GPS start.");
     gpsSerial.begin(9600);
+    radioSendMessage("GPS start.");
   }
-
-  void log(float latitude, float longitude) {
-    Serial.print("LAT=");
-    Serial.print(latitude == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : latitude, 6);
-    Serial.print(" LON=");
-    Serial.print(longitude == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : longitude, 6);
-    Serial.print(" SAT=");
-    Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
-    Serial.print(" PREC=");
-    Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
-  }
+end
 
 _gpsBegin();
 
@@ -38,6 +28,7 @@ par do
     else
       if _gps.encode(_gpsSerial.read()) then
         emit gps_ready;
+        await 3s;
       end
     end
   end
@@ -47,36 +38,8 @@ with
 
     _gps.f_get_position(&_latitude, &_longitude, &_age);
 
-    _log(_latitude, _longitude);
-
     async do
       emit GPS => (_latitude, _longitude);
     end
   end
 end
-
-// loop do
-//   loop do
-//     if _gpsSerial.available() then
-//       _gps.encode(_gpsSerial.read());
-//     else
-//       break;
-//     end
-//   end
-
-//   await 2s;
-//   // _GPS.read();
-
-//   // if _GPS.newNMEAreceived() and _GPS.parse(_GPS.lastNMEA()) then
-//   //   await 2s;
-
-//   //   if _GPS.fix then
-//   //     async do
-//   //       emit GPS => (_GPS.latitudeDegrees, _GPS.longitudeDegrees);
-//   //     end
-//   //   end
-
-//   // else
-//   //   await 3s;
-//   // end
-// end
