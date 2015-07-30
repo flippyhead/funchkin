@@ -1,5 +1,6 @@
 native do
   ##include <TinyGPS.h>
+  static const float milesPerMeter = 0.000621371;
 
   unsigned long calculateDistance(float latitude, float longitude, float wayPointLatitude, float wayPointLongitude) {
     return TinyGPS::distance_between(latitude, longitude, wayPointLatitude, wayPointLongitude);

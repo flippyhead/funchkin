@@ -4,6 +4,7 @@
 
 #define MAX_FRIENDS 1
 #define MY_ID 1
+#define USE_SERIAL 1
 
 // My location and heading
 var float latitude, longitude;
@@ -14,11 +15,14 @@ native do
 
   struct Funchkin friends[MAX_FRIENDS];
 
+  void begin() {
+    Serial.begin(9600);
+  }
+
   void createFriends() {
     friends[0].id = 1;
-    friends[0].latitude =  0.0;
-    friends[0].longitude = 0.0;
-    friends[0].heading = 0;
+    friends[0].latitude =  47.758556;
+    friends[0].longitude = -120.657841;
   }
 
   char direction(int dir) {
@@ -33,12 +37,11 @@ native do
     }
   }
 
-  void updateFriend(int id, float latitude, float longitude, int heading) {
+  void updateFriend(int id, float latitude, float longitude) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
       if (friends[i].id == id) {
         friends[i].latitude = latitude;
         friends[i].longitude = longitude;
-        friends[i].heading = heading;
       }
     }
   }
@@ -61,6 +64,7 @@ native do
 
 end
 
+_begin();
 _createFriends();
 
 par do
@@ -71,11 +75,11 @@ with
   #include "gps.ceu"
 with
   loop do
-    var int fid, fheading;
+    var int fid;
     var float flatitude, flongitude;
 
-    (fid, flatitude, flongitude, fheading) = await RADIO_RX;
-    _updateFriend(fid, flatitude, flongitude, fheading);
+    (fid, flatitude, flongitude) = await RADIO_RX;
+    _updateFriend(fid, flatitude, flongitude);
   end
 with
   loop do
@@ -89,18 +93,24 @@ with
   end
 with
   loop do
-    // _radioTransmit();
+    (latitude, longitude) = await GPS;
+    _radioTransmitLocation(MY_ID, latitude, longitude);
     await 2s;
   end
 with
   loop do
     await 5s;
 
+    _Serial.print("LOCATION: ");
+    _Serial.print(latitude, 6);
+    _Serial.print(", ");
+    _Serial.println(longitude, 6);
+
+    _radioSendMessage("[me] location: %d, %d", 2, (int) latitude, (int) longitude);
+
     loop i in MAX_FRIENDS do
-      _radioSendMessage("Friend: ", _friends[i].id);
-      _radioSendMessage("Distance: ", _friends[i].distance);
-      _radioSendMessage("Bearing: ", _friends[i].bearing);
-      _radioSendMessage("Direction: ", _friends[i].direction);
+      _radioSendMessage("[friend %d] bearing: %d, distance: %lu, direction: %c", 4,
+        _friends[i].id, _friends[i].bearing, _friends[i].distance, _direction(_friends[i].direction));
     end
   end
 end

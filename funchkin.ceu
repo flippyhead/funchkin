@@ -2,10 +2,10 @@ native do
   struct Funchkin {
     // absolute
     float latitude, longitude;
-    int id, heading;
+    int id;
 
     // relative to self
-    float distance;
+    unsigned long distance;
     int bearing, direction;
   };
 end

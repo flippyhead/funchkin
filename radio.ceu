@@ -1,11 +1,13 @@
 native _radioBegin();
 
-input (int, float, float, int) RADIO_RX; // id, latitude, longitude, heading
-input (int, float, float, int) RADIO_TX; // id, latitude, longitude, heading
+input (int, float, float) RADIO_RX; // id, latitude, longitude
+input (int, float, float) RADIO_TX; // id, latitude, longitude
 
 native do
   ##include <XBee.h>
   #include "lib/SerialCommand.cpp"
+
+  static const float LOC_DENOM = 1000000.0;
 
   SerialCommand serialCommand;
   XBee xbee = XBee();
@@ -17,26 +19,25 @@ native do
   XBeeAddress64 addr64 = XBeeAddress64(0x13A200, 0x40A5A01F); // SH + SL Address of receiving XBee
 
   char rxData[48];
-  int rxID, rxHeading;
+  int rxID;
   float rxLatitude, rxLongitude;
 
-  void radioSendMessage(char message[]) {
-    ZBTxRequest zbTx = ZBTxRequest(addr64, (uint8_t *)message, strlen(message));
-    xbee.send(zbTx);
+  void radioSendMessage(char line[]) {
+    #if USE_SERIAL == 1
+      Serial.println(line);
+    #else
+      ZBTxRequest zbTx = ZBTxRequest(addr64, (uint8_t *)line, strlen(line));
+      xbee.send(zbTx);
+    #endif
   }
 
-  void radioSendMessage(String message, int number) {
-    String line = message + " " + number;
-    int length = line.length() + 1;
-    char buffer[length];
-    line.toCharArray(buffer, length);
-    radioSendMessage(buffer);
-  }
-
-  void xradioSendMessage(char message[], int num, ...) {
-    va_list valist;
+  void radioSendMessage(char message[], int num, ...) {
     char line[100];
-    sprintf(line, message, num, valist);
+    va_list argv;
+    va_start(argv, num);
+    vsprintf(line, message, argv);
+    va_end(argv);
+    radioSendMessage(line);
   }
 
   void radioCommandNotRecognized(const char *command) {
@@ -47,7 +48,7 @@ native do
     char *arg, *token;
     arg = serialCommand.next();
     int part = 0;
-    float denom = 1000000.0;
+
     if (arg == NULL) return;
 
     while ((token = strsep(&arg, ","))) {
@@ -57,22 +58,28 @@ native do
           rxID = atoi(token);
           break;
         case 1:
-          rxLatitude = atol(token) / denom; //(parse_degrees(token) / denom);
+          rxLatitude = atol(token) / LOC_DENOM;
           break;
         case 2:
-          rxLongitude = atol(token) / denom;
-          break;
-        case 3:
-          rxHeading = atoi(token);
+          rxLongitude = atol(token) / LOC_DENOM;
           break;
       }
       part = part + 1;
     }
   }
 
+  void radioTransmitLocation(int id, float latitude, float longitude) {
+    char line[82];
+    long lat = (latitude * LOC_DENOM);
+    long lon = (longitude * LOC_DENOM);
+    sprintf(line, "LOC %d,%ld,%ld", id, lat, lon);
+    radioSendMessage(line);
+  }
+
   void radioBegin() {
-    Serial.begin(9600);
-    xbee.setSerial(Serial);
+    #if USE_SERIAL == 0
+      xbee.setSerial(Serial);
+    #endif
 
     serialCommand.setDefaultHandler(radioCommandNotRecognized);
     serialCommand.addCommand("LOC", radioCommandUpdateLocation);
@@ -114,7 +121,7 @@ par do
       _radioSendMessage("[radio] Funchkin received location: ", _rxLatitude);
 
       async do
-        emit RADIO_RX => (_rxID, _rxLatitude, _rxLongitude, _rxHeading);
+        emit RADIO_RX => (_rxID, _rxLatitude, _rxLongitude);
       end
 
     else/if _xbee.getResponse().isError() then
@@ -126,11 +133,5 @@ par do
     await 50ms;
   end
 with
-  loop do
-    // if rxId then
-    //   emit RADIO_RX => (rxId, latitude, longitude, heading);
-    // end
 
-    await 10s;
-  end
 end
