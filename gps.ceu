@@ -15,7 +15,6 @@ native do
 
   void gpsBegin() {
     gpsSerial.begin(9600);
-    radioSendMessage("GPS start.");
   }
 end
 

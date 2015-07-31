@@ -10,15 +10,20 @@ native do
     return TinyGPS::course_to(latitude, longitude, wayPointLatitude, wayPointLongitude);
   }
 
-  int calculateDirection(int bearing, int heading) {
-    if (heading < bearing) heading += 360;  // denormalize
-    int difference = heading - bearing; // calculate left turn, will allways be 0..359
+  int calculateDirection(int heading, int bearing) {
+    if (bearing - heading > 0) {
+      return bearing - heading;
+    } else {
+      return bearing - heading + 360;
+    }
+  }
 
-    if (difference > 345 || difference < 15) {
+  int humanizeDirection(int direction) {
+    if (direction > 345 || direction < 15) {
       return 0; // forward
-    } else if (difference > 165 && difference < 195) {
+    } else if (direction > 165 && direction < 195) {
       return -2; // behind
-    } else if (difference < 180) {
+    } else if (direction < 180) {
       return 1; // left
     } else {
       return -1; // right

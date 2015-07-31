@@ -4,7 +4,8 @@
 
 #define MAX_FRIENDS 1
 #define MY_ID 1
-#define USE_SERIAL 1
+// #define USE_SERIAL
+// #define DEBUG
 
 // My location and heading
 var float latitude, longitude;
@@ -25,18 +26,6 @@ native do
     friends[0].longitude = -120.657841;
   }
 
-  char direction(int dir) {
-    if (dir == 0) {
-      return 'F';
-    } else if (dir == -2) {
-      return 'B';
-    } else if (dir == -1) {
-      return 'R';
-    } else if (dir == 1) {
-      return 'L';
-    }
-  }
-
   void updateFriend(int id, float latitude, float longitude) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
       if (friends[i].id == id) {
@@ -48,8 +37,8 @@ native do
 
   void updateCourses(float latitude, float longitude) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
-      int bearing = calculateBearing(friends[i].latitude, friends[i].longitude, latitude, longitude);
-      float distance = calculateDistance(friends[i].latitude, friends[i].longitude, latitude, longitude);
+      int bearing = calculateBearing(latitude, longitude, friends[i].latitude, friends[i].longitude);
+      float distance = calculateDistance(latitude, longitude, friends[i].latitude, friends[i].longitude);
       friends[i].bearing = bearing;
       friends[i].distance = distance;
     }
@@ -57,8 +46,7 @@ native do
 
   void updateDirections(int heading) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
-      int direction = calculateDirection(friends[i].bearing, heading);
-      friends[i].direction = direction;
+      friends[i].direction = calculateDirection(friends[i].bearing, heading);
     }
   }
 
@@ -74,6 +62,8 @@ with
 with
   #include "gps.ceu"
 with
+  #include "display.ceu"
+with
   loop do
     var int fid;
     var float flatitude, flongitude;
@@ -85,6 +75,10 @@ with
   loop do
     heading = await COMPASS_HEADING;
     _updateDirections(heading);
+
+    async do
+      emit DISPLAY_DIRECTION => _friends[0].direction;
+    end
   end
 with
   loop do
@@ -97,20 +91,17 @@ with
     _radioTransmitLocation(MY_ID, latitude, longitude);
     await 2s;
   end
+#ifdef DEBUG
 with
-  loop do
-    await 5s;
+    loop do
+      await 1s;
 
-    _Serial.print("LOCATION: ");
-    _Serial.print(latitude, 6);
-    _Serial.print(", ");
-    _Serial.println(longitude, 6);
+      _radioSendMessage("[me] location: %d, %d", 2, (int) latitude, (int) longitude);
 
-    _radioSendMessage("[me] location: %d, %d", 2, (int) latitude, (int) longitude);
-
-    loop i in MAX_FRIENDS do
-      _radioSendMessage("[friend %d] bearing: %d, distance: %lu, direction: %c", 4,
-        _friends[i].id, _friends[i].bearing, _friends[i].distance, _direction(_friends[i].direction));
+      loop i in MAX_FRIENDS do
+        _radioSendMessage("[friend %d] bearing: %d, distance: %lu, direction: %d", 4,
+          _friends[i].id, _friends[i].bearing, _friends[i].distance, _friends[i].direction);
+      end
     end
-  end
+#endif
 end

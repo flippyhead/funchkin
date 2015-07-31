@@ -1,25 +1,115 @@
 native _displayBegin();
 
-#define DISPLAY_PIN 6
+#define DISPLAY_PIN 5
 #define DISPLAY_NUMPIXELS 16
+#define TOP_LED 1
+#define LED_OFFSET 0
+
+input (int) DISPLAY_DIRECTION; // heading
 
 native do
   ##include <Adafruit_NeoPixel.h>
 
-  Adafruit_NeoPixel display = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+  Adafruit_NeoPixel display = Adafruit_NeoPixel(DISPLAY_NUMPIXELS, DISPLAY_PIN, NEO_GRB + NEO_KHZ800);
+  int topLED = TOP_LED;
+  int compassOffset = LED_OFFSET;
+
+  int lastDir = 16;
+  int dirLED_r = 0;
+  int dirLED_g = 0;
+  int dirLED_b = 255;
 
   void displayBegin() {
-    // Serial.println("Display start.");
-    // display.begin();
+    display.begin();
   }
+
+  void compassDirection(int compassHeading) {
+    unsigned int ledDir = 2;
+    int tempDir = 0;
+
+    if ((compassHeading > 348.75)||(compassHeading < 11.25)) {
+        tempDir = topLED;
+    }
+    for(int i = 1; i < 16; i++){
+      float pieSliceCenter = 45/2*i;
+      float pieSliceMin = pieSliceCenter - 11.25;
+      float pieSliceMax = pieSliceCenter + 11.25;
+      if ((compassHeading >= pieSliceMin)&&(compassHeading < pieSliceMax)) {
+        tempDir = topLED + i;
+      }
+    }
+
+    if (tempDir > 15) {
+      ledDir = tempDir - 16;
+    }
+
+    else if (tempDir < 0) {
+      ledDir = tempDir + 16;
+    }
+    else {
+      ledDir = tempDir;
+    }
+
+    ledDir = ledDir + compassOffset;
+    if (ledDir > 15) {
+      ledDir = ledDir - 16;
+    }
+
+    if (lastDir != ledDir) {
+      display.setPixelColor(lastDir, display.Color(0, 0, 0));
+      display.setPixelColor(ledDir, display.Color(dirLED_r, dirLED_g, dirLED_b));
+      display.show();
+      lastDir = ledDir;
+    }
+  }
+
+  // void headingDistance(int fDist) {
+  //   //Use this part of the code to determine how far you are away from the destination.
+  //   //The total trip distance (from where you started) is divided into five trip segments.
+  //   float tripSegment = tripDistance/5;
+
+  //   if (fDist >= (tripSegment*4)) {
+  //     dirLED_r = 255;
+  //     dirLED_g = 0;
+  //     dirLED_b = 0;
+  //   }
+
+  //   if ((fDist >= (tripSegment*3))&&(fDist < (tripSegment*4))) {
+  //     dirLED_r = 255;
+  //     dirLED_g = 0;
+  //     dirLED_b = 0;
+  //   }
+
+  //   if ((fDist >= (tripSegment*2))&&(fDist < (tripSegment*3))) {
+  //     dirLED_r = 255;
+  //     dirLED_g = 255;
+  //     dirLED_b = 0;
+  //   }
+
+  //   if ((fDist >= tripSegment)&&(fDist < (tripSegment*2))) {
+  //     dirLED_r = 255;
+  //     dirLED_g = 255;
+  //     dirLED_b = 0;
+  //   }
+
+  //   if ((fDist >= 5)&&(fDist < tripSegment)) {
+  //     dirLED_r = 255;
+  //     dirLED_g = 255;
+  //     dirLED_b = 0;
+  //   }
+
+  //   if ((fDist < 5)) { // You are now within 5 meters of your destination.
+  //     //Serial.println("Arrived at destination!");
+  //     dirLED_r = 0;
+  //     dirLED_g = 255;
+  //     dirLED_b = 0;
+  //   }
+  // }
 end
 
 _displayBegin();
 
 loop do
-  loop i in DISPLAY_NUMPIXELS do
-    _dispaly.setPixelColor(i, pixels.Color(0,150,0)); // Moderately bright green color.
-    _dispaly.show();
-    await 500ms;
-  end
+  var int displayDirection = await DISPLAY_DIRECTION;
+  _compassDirection(displayDirection);
 end

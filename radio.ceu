@@ -15,6 +15,7 @@ native do
   XBeeResponse response = XBeeResponse();
   ZBRxResponse rx = ZBRxResponse();
   ModemStatusResponse msr = ModemStatusResponse();
+
   ZBTxStatusResponse txStatus = ZBTxStatusResponse();
   XBeeAddress64 addr64 = XBeeAddress64(0x13A200, 0x40A5A01F); // SH + SL Address of receiving XBee
 
@@ -23,7 +24,7 @@ native do
   float rxLatitude, rxLongitude;
 
   void radioSendMessage(char line[]) {
-    #if USE_SERIAL == 1
+    #ifdef USE_SERIAL
       Serial.println(line);
     #else
       ZBTxRequest zbTx = ZBTxRequest(addr64, (uint8_t *)line, strlen(line));
@@ -77,14 +78,14 @@ native do
   }
 
   void radioBegin() {
-    #if USE_SERIAL == 0
+    #ifdef USE_SERIAL
+      // nope
+    #else
       xbee.setSerial(Serial);
     #endif
 
     serialCommand.setDefaultHandler(radioCommandNotRecognized);
     serialCommand.addCommand("LOC", radioCommandUpdateLocation);
-
-    radioSendMessage("GPS start.");
   }
 
   bool radioHasNewData() {
