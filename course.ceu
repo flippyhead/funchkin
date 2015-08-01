@@ -1,9 +1,10 @@
 native do
   ##include <TinyGPS.h>
-  static const float milesPerMeter = 0.000621371;
 
-  unsigned long calculateDistance(float latitude, float longitude, float wayPointLatitude, float wayPointLongitude) {
-    return TinyGPS::distance_between(latitude, longitude, wayPointLatitude, wayPointLongitude);
+  unsigned int calculateDistance(float latitude, float longitude, float wayPointLatitude, float wayPointLongitude) {
+    unsigned long distance = TinyGPS::distance_between(latitude, longitude, wayPointLatitude, wayPointLongitude);
+    if (distance > 10000) distance = 10000;
+    return distance;
   }
 
   float calculateBearing(float latitude, float longitude, float wayPointLatitude, float wayPointLongitude) {
@@ -28,17 +29,6 @@ native do
     } else {
       return -1; // right
     }
-  }
-
-  float scaledDistance(float distance, char unit) {
-    switch(unit) {
-      case 'M':
-        break;
-      case 'F':
-        distance = distance * 5280;
-        break;
-    }
-    return distance;
   }
 
 end

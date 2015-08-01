@@ -1,0 +1,11 @@
+native do
+  typedef unsigned char uint8;
+
+  struct Color {
+    uint8 red;
+    uint8 green;
+    uint8 blue;
+
+    Color(uint8 r, uint8 g, uint8 b) : red(r), green(g), blue(b) {}
+  };
+end

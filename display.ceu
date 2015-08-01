@@ -1,11 +1,16 @@
+#include "color.ceu"
+
 native _displayBegin();
 
 #define DISPLAY_PIN 5
 #define DISPLAY_NUMPIXELS 16
 #define TOP_LED 1
 #define LED_OFFSET 0
+#define MAX_DISTANCE 2000 // meters; approx. 6 miles (size of BRC city limits) == 9656 meters
+#define STEPS 10
 
 input (int) DISPLAY_DIRECTION; // heading
+input (int) DISPLAY_DISTANCE; // in meters
 
 native do
   ##include <Adafruit_NeoPixel.h>
@@ -15,15 +20,13 @@ native do
   int compassOffset = LED_OFFSET;
 
   int lastDir = 16;
-  int dirLED_r = 0;
-  int dirLED_g = 0;
-  int dirLED_b = 255;
+  Color dirLED(0, 0, 255);
 
   void displayBegin() {
     display.begin();
   }
 
-  void compassDirection(int compassHeading) {
+  void displayDirection(int compassHeading) {
     unsigned int ledDir = 2;
     int tempDir = 0;
 
@@ -57,59 +60,38 @@ native do
 
     if (lastDir != ledDir) {
       display.setPixelColor(lastDir, display.Color(0, 0, 0));
-      display.setPixelColor(ledDir, display.Color(dirLED_r, dirLED_g, dirLED_b));
+      display.setPixelColor(ledDir, display.Color(dirLED.red, dirLED.green, dirLED.blue));
       display.show();
       lastDir = ledDir;
     }
   }
 
-  // void headingDistance(int fDist) {
-  //   //Use this part of the code to determine how far you are away from the destination.
-  //   //The total trip distance (from where you started) is divided into five trip segments.
-  //   float tripSegment = tripDistance/5;
+  int displayDistance(int distance) {
+    // Color Farthest(0, 0, 255);  // blue
+    // Color Closest(255, 0, 0);  // red
 
-  //   if (fDist >= (tripSegment*4)) {
-  //     dirLED_r = 255;
-  //     dirLED_g = 0;
-  //     dirLED_b = 0;
-  //   }
+    int shadesPerStep = 255 / STEPS;
+    int metersPerStep = MAX_DISTANCE / STEPS;
+    int currentStep = distance / metersPerStep;
 
-  //   if ((fDist >= (tripSegment*3))&&(fDist < (tripSegment*4))) {
-  //     dirLED_r = 255;
-  //     dirLED_g = 0;
-  //     dirLED_b = 0;
-  //   }
+    if (currentStep > 10) currentStep = 10;
 
-  //   if ((fDist >= (tripSegment*2))&&(fDist < (tripSegment*3))) {
-  //     dirLED_r = 255;
-  //     dirLED_g = 255;
-  //     dirLED_b = 0;
-  //   }
-
-  //   if ((fDist >= tripSegment)&&(fDist < (tripSegment*2))) {
-  //     dirLED_r = 255;
-  //     dirLED_g = 255;
-  //     dirLED_b = 0;
-  //   }
-
-  //   if ((fDist >= 5)&&(fDist < tripSegment)) {
-  //     dirLED_r = 255;
-  //     dirLED_g = 255;
-  //     dirLED_b = 0;
-  //   }
-
-  //   if ((fDist < 5)) { // You are now within 5 meters of your destination.
-  //     //Serial.println("Arrived at destination!");
-  //     dirLED_r = 0;
-  //     dirLED_g = 255;
-  //     dirLED_b = 0;
-  //   }
-  // }
+    dirLED.red = 255 - shadesPerStep * currentStep;
+    dirLED.green = 0;
+    dirLED.blue = shadesPerStep * currentStep;
+  }
 end
 
 _displayBegin();
 
-loop do
-  var int displayDirection = await DISPLAY_DIRECTION;
-  _compassDirection(displayDirection);
+par do
+  loop do
+    var int ddirection = await DISPLAY_DIRECTION;
+    _displayDirection(ddirection);
+  end
+with
+  loop do
+    var int ddistance = await DISPLAY_DISTANCE;
+    _displayDistance(ddistance);
+  end
 end
