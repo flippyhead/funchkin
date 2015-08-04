@@ -1,6 +1,7 @@
 #include "arduino.ceu"
 #include "funchkin.ceu"
 #include "course.ceu"
+#include "audio.ceu"
 
 #define MAX_FRIENDS 1
 #define MY_ID 1
@@ -20,15 +21,10 @@ native do
     Serial.begin(9600);
   }
 
-  // Leavenworth: 47.599803, -120.666364
-  // Seattle: 47.628964, -122.309127
-  // Plain Hardware: 47.758538, -120.657819
-  // Across River from Cabin: 47.750979, -120.665341
-
   void createFriends() {
     friends[0].id = 1;
-    friends[0].latitude =  47.750979;
-    friends[0].longitude = -120.665341;
+    friends[0].latitude =  47.832292;
+    friends[0].longitude = -120.782459;
   }
 
   void updateFriend(int id, float latitude, float longitude) {
