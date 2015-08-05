@@ -1,7 +1,6 @@
 #include "arduino.ceu"
 #include "funchkin.ceu"
 #include "course.ceu"
-#include "audio.ceu"
 
 #define MAX_FRIENDS 1
 #define MY_ID 1
