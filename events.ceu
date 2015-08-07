@@ -1,0 +1,11 @@
+input (float, float) GPS; // latitude, longitude
+
+input (int) DISPLAY_DIRECTION; // heading
+input (int) DISPLAY_DISTANCE; // in meters
+
+input (int, float, float) RADIO_RX; // id, latitude, longitude
+input (int, float, float) RADIO_TX; // id, latitude, longitude
+
+event void gps_ready;
+event void display_gps_age_warning;
+event void display_radio_rx_timeout;

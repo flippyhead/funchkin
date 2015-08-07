@@ -1,7 +1,6 @@
 native _radioBegin();
 
-input (int, float, float) RADIO_RX; // id, latitude, longitude
-input (int, float, float) RADIO_TX; // id, latitude, longitude
+#define RADIO_RX_TIMEOUT 60 // seconds
 
 native do
   ##include <XBee.h>
@@ -109,6 +108,8 @@ end
 
 _radioBegin();
 
+var int timeSinceLastRadioRx = 0; // seconds
+
 par do
   loop do
     _xbee.readPacket();
@@ -120,6 +121,7 @@ par do
       _serialCommand.readCommand(_rxData);
 
       _radioSendMessage("[radio] Funchkin received location: ", _rxLatitude);
+      timeSinceLastRadioRx = 0;
 
       async do
         emit RADIO_RX => (_rxID, _rxLatitude, _rxLongitude);
@@ -134,5 +136,11 @@ par do
     await 50ms;
   end
 with
-
+  loop do
+    await 1s;
+    timeSinceLastRadioRx = timeSinceLastRadioRx + 1; // second
+    if timeSinceLastRadioRx > RADIO_RX_TIMEOUT then
+      emit display_radio_rx_timeout;
+    end
+  end
 end

@@ -4,13 +4,11 @@ native _displayBegin();
 
 #define DISPLAY_PIN 5
 #define DISPLAY_NUMPIXELS 16
+#define DISPLAY_NEARBY_LIMIT 5 // meters
 #define TOP_LED 1
 #define LED_OFFSET 0
 #define MAX_DISTANCE 2000 // meters; approx. 6 miles (size of BRC city limits) == 9656 meters
 #define STEPS 10
-
-input (int) DISPLAY_DIRECTION; // heading
-input (int) DISPLAY_DISTANCE; // in meters
 
 native do
   ##include <Adafruit_NeoPixel.h>
@@ -42,7 +40,7 @@ native do
   }
 
   void displayDirection(int compassHeading) {
-    unsigned int ledDir = 2;
+    unsigned int ledDir = 0;
     int tempDir = 0;
 
     if ((compassHeading > 348.75)||(compassHeading < 11.25)) {
@@ -73,18 +71,15 @@ native do
       ledDir = ledDir - 16;
     }
 
-    if (lastDir != ledDir) {
+    // if (lastDir != ledDir) {
       display.setPixelColor(lastDir, display.Color(0, 0, 0));
       display.setPixelColor(ledDir, display.Color(dirLED.red, dirLED.green, dirLED.blue));
       display.show();
       lastDir = ledDir;
-    }
+    // }
   }
 
   int displayDistance(int distance) {
-    // Color Farthest(0, 0, 255);  // blue
-    // Color Closest(255, 0, 0);  // red
-
     int shadesPerStep = 255 / STEPS;
     int metersPerStep = MAX_DISTANCE / STEPS;
     int currentStep = distance / metersPerStep;
@@ -96,20 +91,59 @@ native do
     dirLED.blue = shadesPerStep * currentStep;
   }
 
-  void theaterChaseRainbow(uint8_t wait) {
-    for (int j=0; j < 6; j++) {
+  void displayColorWipe(uint32_t c) {
+    for(uint16_t i=0; i < display.numPixels(); i++) {
+      display.setPixelColor(i, c);
+      display.show();
+      delay(25);
+    }
+
+    for(uint16_t i=0; i < display.numPixels(); i++) {
+      display.setPixelColor(i, 0);
+      display.show();
+      delay(25);
+    }
+  }
+
+  void displayColorBlink(uint32_t c) {
+    for(uint16_t i=0; i < display.numPixels(); i++) {
+      if (i == lastDir) continue;
+      display.setPixelColor(i, c);
+      display.show();
+    }
+    delay(25);
+    for(uint16_t i=0; i < display.numPixels(); i++) {
+      if (i == lastDir) continue;
+      display.setPixelColor(i, 0);
+      display.show();
+    }
+  }
+
+  void displayNearby() {
+    for (int j=0; j < 255; j += 12) {
       for (int q=0; q < 3; q++) {
         for (int i=0; i < display.numPixels(); i=i+3) {
           display.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
         }
         display.show();
-
-        delay(wait);
+        delay(20);
 
         for (int i=0; i < display.numPixels(); i=i+3) {
           display.setPixelColor(i+q, 0);        //turn every third pixel off
         }
       }
+    }
+    for (int i=0; i < display.numPixels(); i=i+1) {
+      display.setPixelColor(i, 0);
+      display.show();
+    }
+  }
+
+  void displayRadioRxTimeout() {
+    for (int i = 0; i < 5; ++i) { // blink 5 times
+      display.setPixelColor(lastDir, 0);
+      delay(200);
+      display.setPixelColor(lastDir, display.Color(dirLED.red, dirLED.green, dirLED.blue));
     }
   }
 
@@ -117,9 +151,10 @@ end
 
 _displayBegin();
 
-par do
-  _theaterChaseRainbow(50);
-  _displayDirection(1);
+par do // startup, show once
+  _displayColorWipe(_display.Color(255, 0, 0));
+  _displayColorWipe(_display.Color(0, 255, 0));
+  _displayColorWipe(_display.Color(0, 0, 255));
 with
   loop do
     var int ddirection = await DISPLAY_DIRECTION;
@@ -129,5 +164,31 @@ with
   loop do
     var int ddistance = await DISPLAY_DISTANCE;
     _displayDistance(ddistance);
+  end
+with
+  loop do
+    var int ddistance = await DISPLAY_DISTANCE;
+    if ddistance < DISPLAY_NEARBY_LIMIT then
+      _displayNearby();
+      _displayDistance(ddistance); // turn dir. back on
+    end
+    await 6s;
+  end
+with
+  loop do
+    await display_gps_age_warning;
+    _displayColorBlink(_display.Color(25, 0, 0));
+  end
+with
+  loop do
+    await display_radio_rx_timeout;
+    loop i in 1 do // blink 5 times
+      _display.setPixelColor(_lastDir, 0);
+      _display.show();
+
+      await 250ms;
+      _display.setPixelColor(_lastDir, _display.Color(_dirLED.red, _dirLED.green, _dirLED.blue));
+      _display.show();
+    end
   end
 end

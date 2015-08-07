@@ -1,14 +1,13 @@
 native _gpsBegin();
 
-input (float, float) GPS; // latitude, longitude
-event void gps_ready;
+#define GPS_MAX_AGE 1
 
 native do
   SoftwareSerial gpsSerial(8, 7);
   TinyGPS gps;
 
   float latitude, longitude;
-  unsigned long age;
+  unsigned long age = 1000;
 
   char xbuf[100];
   int index = 0;
@@ -39,6 +38,18 @@ with
 
     async do
       emit GPS => (_latitude, _longitude);
+    end
+  end
+with
+  loop do
+    await 2s;
+
+    #ifdef DEBUG
+      _radioSendMessage("[gps] age: %d", 2, _age);
+    #endif
+
+    if _age > GPS_MAX_AGE then
+      emit display_gps_age_warning;
     end
   end
 end

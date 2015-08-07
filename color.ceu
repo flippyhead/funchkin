@@ -1,3 +1,6 @@
+// Color Farthest(0, 0, 255);  -> blue
+// Color Closest(255, 0, 0);   -> red
+
 native do
   typedef unsigned char uint8;
 
