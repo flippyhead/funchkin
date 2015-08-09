@@ -1,6 +1,6 @@
 native _gpsBegin();
 
-#define GPS_MAX_AGE 1
+#define GPS_MAX_AGE 100
 
 native do
   SoftwareSerial gpsSerial(8, 7);

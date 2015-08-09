@@ -16,7 +16,14 @@ native do
   ModemStatusResponse msr = ModemStatusResponse();
 
   ZBTxStatusResponse txStatus = ZBTxStatusResponse();
-  XBeeAddress64 addr64 = XBeeAddress64(0x13A200, 0x40A5A01F); // SH + SL Address of receiving XBee
+
+  // SH + SL Address of **receiving** XBee
+  #if MY_FUNCHKIN_ID == 1
+    XBeeAddress64 addr64 = XBeeAddress64(0x13A200, 0x40A5A082);
+  #endif
+  #if MY_FUNCHKIN_ID == 2
+    XBeeAddress64 addr64 = XBeeAddress64(0x13A200, 0x40A5A01F);
+  #endif
 
   char rxData[48];
   int rxID;

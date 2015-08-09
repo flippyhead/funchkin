@@ -1,5 +1,3 @@
-native _compassBegin();
-
 input (float) COMPASS_HEADING; // heading
 
 native do
@@ -41,6 +39,6 @@ end
 _compassBegin();
 
 loop do
-  _compassCalibration()
+  _compassCalibrate();
   await 100ms;
 end

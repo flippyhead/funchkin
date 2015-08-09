@@ -5,14 +5,8 @@
   <repeat_times>10</repeat_times>
   <repeat_period>500</repeat_period>
   <frames_list>
-    <frame name="frame_0">
-      <payload>7E001310010013A20040A5A082FFFE000048454C4C4FC1</payload>
-    </frame>
     <frame name="frame_1">
       <payload>7E002800010013A20040A5A082004C4F4320312C34373735383536342C2D3132303635373434342C31323050</payload>
-    </frame>
-    <frame name="frame_2">
-      <payload>7E000A010113A20048454C4C4FD4</payload>
     </frame>
   </frames_list>
 </data>

@@ -1,11 +1,12 @@
 #include "arduino.ceu"
 #include "funchkin.ceu"
 #include "course.ceu"
+#include "events.ceu"
 
+#define MY_FUNCHKIN_ID 1
 #define MAX_FRIENDS 1
-#define MY_ID 1
-#define USE_SERIAL
-#define DEBUG
+// #define USE_SERIAL
+// #define DEBUG
 
 // My location and heading
 var float latitude, longitude;
@@ -21,9 +22,9 @@ native do
   }
 
   void createFriends() {
-    friends[0].id = 1;
-    friends[0].latitude =  47.832292;
-    friends[0].longitude = -120.782459;
+    friends[0].id = 2;
+    friends[0].latitude =  47.750979;
+    friends[0].longitude = -120.665341;
   }
 
   void updateFriend(int id, float latitude, float longitude) {
@@ -40,9 +41,19 @@ native do
       int bearing = calculateBearing(latitude, longitude, friends[i].latitude, friends[i].longitude);
       float distance = calculateDistance(latitude, longitude, friends[i].latitude, friends[i].longitude);
       friends[i].bearing = bearing;
+      friends[i].previousDistance = friends[i].distance;
       friends[i].distance = distance;
     }
   }
+
+  // bool updateProgressTier() {
+  //   unsigned long distance, previousDistance;
+  //   int distanceTier;
+  //   distance = friends[i].distance;
+  //   previousDistance = friends[i].previousDistance;
+  //   distanceTier = friends[i].previousDistance;
+
+  // }
 
   void updateDirections(int heading) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
@@ -93,7 +104,7 @@ with
 with
   loop do
     (latitude, longitude) = await GPS;
-    _radioTransmitLocation(MY_ID, latitude, longitude);
+    _radioTransmitLocation(MY_FUNCHKIN_ID, latitude, longitude);
     await 2s;
   end
 #ifdef DEBUG
