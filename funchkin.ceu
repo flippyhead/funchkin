@@ -5,7 +5,7 @@ native do
     int id;
 
     // relative to self
-    unsigned long distance, previousDistance;
+    unsigned int distance, previousDistance;
     int bearing, direction, distanceTier;
   };
 end

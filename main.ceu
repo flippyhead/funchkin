@@ -21,14 +21,18 @@ native do
     Serial.begin(9600);
   }
 
-  void createFriends() {
-    friends[0].id = 2;
-    friends[0].latitude =  47.750979;
-    friends[0].longitude = -120.665341;
+  void initFriends() {
+    for (int i = 0; i < MAX_FRIENDS; i++) {
+      friends[i].id = 0;
+      friends[i].latitude = 0;
+      friends[i].longitude = 0;
+    }
   }
 
   void updateFriend(int id, float latitude, float longitude) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
+      if (friends[i].id == 0) friends[i].id = id;
+
       if (friends[i].id == id) {
         friends[i].latitude = latitude;
         friends[i].longitude = longitude;
@@ -39,7 +43,7 @@ native do
   void updateCourses(float latitude, float longitude) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
       int bearing = calculateBearing(latitude, longitude, friends[i].latitude, friends[i].longitude);
-      float distance = calculateDistance(latitude, longitude, friends[i].latitude, friends[i].longitude);
+      unsigned int distance = calculateDistance(latitude, longitude, friends[i].latitude, friends[i].longitude);
       friends[i].bearing = bearing;
       friends[i].previousDistance = friends[i].distance;
       friends[i].distance = distance;
@@ -64,7 +68,6 @@ native do
 end
 
 _begin();
-_createFriends();
 
 par do
   #include "compass.ceu"

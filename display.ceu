@@ -5,10 +5,15 @@ native _displayBegin();
 #define DISPLAY_PIN 5
 #define DISPLAY_NUMPIXELS 16
 #define DISPLAY_NEARBY_LIMIT 5 // meters
+#define DISPLAY_CLOSEBY_LIMIT 20 // meters
+#define DISPLAY_PADDING_BRIGHTNESS 50
 #define TOP_LED 1
 #define LED_OFFSET 0
 #define MAX_DISTANCE 2000 // meters; approx. 6 miles (size of BRC city limits) == 9656 meters
 #define STEPS 10
+
+var int distance;
+var int direction;
 
 native do
   ##include <Adafruit_NeoPixel.h>
@@ -18,7 +23,11 @@ native do
   int compassOffset = LED_OFFSET;
 
   int lastDir = 16;
+  int lastDirLeft, lastDirRight;
   Color dirLED(0, 0, 255);
+
+  int direction;
+  unsigned int distance;
 
   // Input a value 0 to 255 to get a color value.
   // The colours are a transition r - g - b - back to r.
@@ -39,18 +48,18 @@ native do
     display.begin();
   }
 
-  void displayDirection(int compassHeading) {
+  void displayDirection(int direction, int padding) {
     unsigned int ledDir = 0;
     int tempDir = 0;
+    int offset, offsetDir;
 
-    if ((compassHeading > 348.75)||(compassHeading < 11.25)) {
-        tempDir = topLED;
-    }
+    if ((direction > 348.75) || (direction < 11.25)) tempDir = topLED;
+
     for(int i = 1; i < 16; i++){
       float pieSliceCenter = 45/2*i;
       float pieSliceMin = pieSliceCenter - 11.25;
       float pieSliceMax = pieSliceCenter + 11.25;
-      if ((compassHeading >= pieSliceMin)&&(compassHeading < pieSliceMax)) {
+      if ((direction >= pieSliceMin) && (direction < pieSliceMax)) {
         tempDir = topLED + i;
       }
     }
@@ -58,7 +67,6 @@ native do
     if (tempDir > 15) {
       ledDir = tempDir - 16;
     }
-
     else if (tempDir < 0) {
       ledDir = tempDir + 16;
     }
@@ -67,16 +75,35 @@ native do
     }
 
     ledDir = ledDir + compassOffset;
-    if (ledDir > 15) {
-      ledDir = ledDir - 16;
+    if (ledDir > 15) ledDir = ledDir - 16;
+
+    for (int i = 0; i < 16; ++i) {
+      display.setPixelColor(i, display.Color(0, 0, 0));
     }
 
-    // if (lastDir != ledDir) {
-      display.setPixelColor(lastDir, display.Color(0, 0, 0));
-      display.setPixelColor(ledDir, display.Color(dirLED.red, dirLED.green, dirLED.blue));
-      display.show();
-      lastDir = ledDir;
-    // }
+    for (int i = 0; i < padding; ++i) {
+      if (i % 2) {offset = -1;} else {offset = 1;}
+
+      offsetDir = ledDir + offset;
+      if (offsetDir > 15) offsetDir = offsetDir - 16;
+      if (offsetDir < 0) offsetDir = offsetDir + 16;
+
+      display.setPixelColor(offsetDir,
+        display.Color(
+          DISPLAY_PADDING_BRIGHTNESS*dirLED.red/255,
+          DISPLAY_PADDING_BRIGHTNESS*dirLED.green/255,
+          DISPLAY_PADDING_BRIGHTNESS*dirLED.blue/255
+        )
+      );
+    }
+
+    display.setPixelColor(ledDir, display.Color(dirLED.red, dirLED.green, dirLED.blue));
+    lastDir = ledDir;
+    display.show();
+  }
+
+  void displayDirection(int direction) {
+    displayDirection(direction, 0);
   }
 
   int displayDistance(int distance) {
@@ -157,20 +184,24 @@ par do // startup, show once
   _displayColorWipe(_display.Color(0, 0, 255));
 with
   loop do
-    var int ddirection = await DISPLAY_DIRECTION;
-    _displayDirection(ddirection);
+    direction = await DISPLAY_DIRECTION;
+    if distance < DISPLAY_CLOSEBY_LIMIT then
+      _displayDirection(direction, 2);
+    else
+      _displayDirection(direction, 0);
+    end
   end
 with
   loop do
-    var int ddistance = await DISPLAY_DISTANCE;
-    _displayDistance(ddistance);
+    distance = await DISPLAY_DISTANCE;
+    _displayDistance(distance);
   end
 with
   loop do
-    var int ddistance = await DISPLAY_DISTANCE;
-    if ddistance < DISPLAY_NEARBY_LIMIT then
+    distance = await DISPLAY_DISTANCE;
+    if distance < DISPLAY_NEARBY_LIMIT then
       _displayNearby();
-      _displayDistance(ddistance); // turn dir. back on
+      _displayDistance(distance); // turn dir. back on
     end
     await 6s;
   end
@@ -182,13 +213,10 @@ with
 with
   loop do
     await display_radio_rx_timeout;
-    loop i in 1 do // blink 5 times
-      _display.setPixelColor(_lastDir, 0);
-      _display.show();
-
-      await 250ms;
-      _display.setPixelColor(_lastDir, _display.Color(_dirLED.red, _dirLED.green, _dirLED.blue));
-      _display.show();
-    end
+    _display.setPixelColor(_lastDir, 0);
+    _display.show();
+    await 250ms;
+    _display.setPixelColor(_lastDir, _display.Color(_dirLED.red, _dirLED.green, _dirLED.blue));
+    _display.show();
   end
 end

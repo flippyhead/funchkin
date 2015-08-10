@@ -35,5 +35,5 @@ loop do
     emit COMPASS_HEADING => heading;
   end
 
-  await 250ms;
+  await 100ms;
 end
