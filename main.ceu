@@ -5,8 +5,8 @@
 
 #define MY_FUNCHKIN_ID 1
 #define MAX_FRIENDS 1
-// #define USE_SERIAL
-// #define DEBUG
+#define USE_SERIAL
+#define DEBUG
 
 // My location and heading
 var float latitude, longitude;
@@ -16,6 +16,8 @@ native do
   ##include <SoftwareSerial.h>
 
   struct Funchkin friends[MAX_FRIENDS];
+
+  static int distanceTiers[10] = {5, 10, 20, 40, 80, 160, 320, 640, 1280, 99999};
 
   void begin() {
     Serial.begin(9600);
@@ -40,24 +42,23 @@ native do
     }
   }
 
+  int calculateDistanceTier(int distance) {
+    for (int i = 0; i < 9; ++i) {
+      if (distanceTiers[i] <= distance && distanceTiers[i+1] >= distance) return i;
+    }
+    return -1; // should never reach here
+  }
+
   void updateCourses(float latitude, float longitude) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
       int bearing = calculateBearing(latitude, longitude, friends[i].latitude, friends[i].longitude);
       unsigned int distance = calculateDistance(latitude, longitude, friends[i].latitude, friends[i].longitude);
       friends[i].bearing = bearing;
-      friends[i].previousDistance = friends[i].distance;
       friends[i].distance = distance;
+      friends[i].previousDistanceTier = friends[i].distanceTier;
+      friends[i].distanceTier = calculateDistanceTier(distance);
     }
   }
-
-  // bool updateProgressTier() {
-  //   unsigned long distance, previousDistance;
-  //   int distanceTier;
-  //   distance = friends[i].distance;
-  //   previousDistance = friends[i].previousDistance;
-  //   distanceTier = friends[i].previousDistance;
-
-  // }
 
   void updateDirections(int heading) {
     for (int i = 0; i < MAX_FRIENDS; i++) {
@@ -75,6 +76,8 @@ with
   #include "radio.ceu"
 with
   #include "gps.ceu"
+with
+  #include "audio.ceu"
 with
   #include "display.ceu"
 with
@@ -99,10 +102,20 @@ with
     (latitude, longitude) = await GPS;
     _updateCourses(latitude, longitude);
 
+    if _friends[0].distanceTier != _friends[0].previousDistanceTier then
+      var bool movingAway = (_friends[0].distanceTier > _friends[0].previousDistanceTier);
+      emit audio_distance_tier_change => (_friends[0].distanceTier, movingAway);
+    end
+
     async do
       var int fdistance = _friends[0].distance;
       emit DISPLAY_DISTANCE => fdistance;
     end
+  end
+with
+  loop do
+    emit audio_distance_tier_change => (1, true);
+    await 5s;
   end
 with
   loop do

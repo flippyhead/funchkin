@@ -127,7 +127,6 @@ par do
       _radioParseRxPayload(_rxData);
       _serialCommand.readCommand(_rxData);
 
-      _radioSendMessage("[radio] Funchkin received location: ", _rxLatitude);
       timeSinceLastRadioRx = 0;
 
       async do

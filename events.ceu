@@ -9,3 +9,4 @@ input (int, float, float) RADIO_TX; // id, latitude, longitude
 event void gps_ready;
 event void display_gps_age_warning;
 event void display_radio_rx_timeout;
+event (int, bool) audio_distance_tier_change; // current tier, moving away
