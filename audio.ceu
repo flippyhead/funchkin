@@ -9,7 +9,10 @@
 640M (~ 0.5 mile)
 1.28KM (~ 1.0 mile)
 */
-#define LINE_BUFFER_SIZE  80
+#define LINE_BUFFER_SIZE  20
+
+var int distanceTier, track;
+var bool movingAway;
 
 native do
   SoftwareSerial audioSerial(11, 10);
@@ -28,6 +31,8 @@ native do
 
     while (audioSerial.available()) audioSerial.read();
     audioSerial.print("#"); audioSerial.println(n);
+    audioSerial.print("#"); audioSerial.println(n);
+    // audioSerial.print("P"); audioSerial.println("T07     WAV");
     audioReadLine();
     audioReadLine();
 
@@ -38,7 +43,13 @@ end
 
 _audioSerial.begin(9600);
 
-loop i in 10 do
-  _audioPlayTrack(i+1);
-  await 1s;
+loop do
+  (distanceTier, movingAway) = await audio_distance_tier_change;
+  track = distanceTier;
+  if movingAway then
+    track = track + 10;
+  end
+
+  _Serial.print("PLAYING "); _Serial.println(track);
+  _audioPlayTrack(track);
 end

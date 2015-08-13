@@ -6,7 +6,13 @@ native do
   SoftwareSerial gpsSerial(8, 7);
   TinyGPS gps;
 
-  float latitude, longitude;
+  #ifdef SIMULATION
+    float latitude = 47.613630;
+    float longitude = -122.308631;
+  #else
+    float latitude, longitude;
+  #endif
+
   unsigned long age = 1000;
 
   char xbuf[100];
@@ -32,9 +38,12 @@ par do
   end
 with
   loop do
-    await gps_ready;
-
-    _gps.f_get_position(&_latitude, &_longitude, &_age);
+    #ifdef SIMULATION
+      await 5s;
+    #else
+      await gps_ready;
+      _gps.f_get_position(&_latitude, &_longitude, &_age);
+    #endif
 
     async do
       emit GPS => (_latitude, _longitude);

@@ -3,10 +3,11 @@
 #include "course.ceu"
 #include "events.ceu"
 
-#define MY_FUNCHKIN_ID 1
+#define MY_FUNCHKIN_ID 2
 #define MAX_FRIENDS 1
 #define USE_SERIAL
-// #define DEBUG
+#define DEBUG
+#define SIMULATION
 
 // My location and heading
 var float latitude, longitude;
@@ -18,10 +19,6 @@ native do
   struct Funchkin friends[MAX_FRIENDS];
 
   static int distanceTiers[10] = {5, 10, 20, 40, 80, 160, 320, 640, 1280, 99999};
-
-  void begin() {
-    Serial.begin(9600);
-  }
 
   void initFriends() {
     for (int i = 0; i < MAX_FRIENDS; i++) {
@@ -42,9 +39,19 @@ native do
     }
   }
 
+  void begin() {
+    Serial.begin(9600);
+    initFriends();
+    #ifdef SIMULATION
+      updateFriend(1, 47.613645, -122.308781); // simulate update
+    #endif
+  }
+
   int calculateDistanceTier(int distance) {
     for (int i = 0; i < 9; ++i) {
-      if (distanceTiers[i] <= distance && distanceTiers[i+1] >= distance) return i;
+      if (distanceTiers[i] <= distance && distanceTiers[i+1] >= distance) {
+        return i;
+      }
     }
     return -1; // should never reach here
   }
@@ -114,11 +121,6 @@ with
   end
 with
   loop do
-    emit audio_distance_tier_change => (1, true);
-    await 5s;
-  end
-with
-  loop do
     (latitude, longitude) = await GPS;
     _radioTransmitLocation(MY_FUNCHKIN_ID, latitude, longitude);
     await 2s;
@@ -128,11 +130,11 @@ with
     loop do
       await 1s;
 
-      _radioSendMessage(F("[me] location: %d, %d"), 2, (int) latitude, (int) longitude);
+      _radioSendMessage("[me] location: %d, %d", 2, (int) latitude, (int) longitude);
 
       loop i in MAX_FRIENDS do
-        _radioSendMessage(F("[friend %d] bearing: %d, distance: %lu, direction: %d"), 4,
-          _friends[i].id, _friends[i].bearing, _friends[i].distance, _friends[i].direction);
+        _radioSendMessage("[friend %d] bearing: %d, distance: %d, direction: %d, tier: %d", 5,
+          _friends[i].id, _friends[i].bearing, _friends[i].distance, _friends[i].direction, _friends[i].distanceTier);
       end
     end
 #endif
