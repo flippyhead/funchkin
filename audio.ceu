@@ -23,35 +23,7 @@ native do
     return x;
   }
 
-
-  // uint8_t Adafruit_Soundboard::volUp() {
-  //   while (stream->available())
-  //     stream->read();
-
-  //   stream->println("+");
-  //   readLine();
-  //   //Serial.println(line_buffer);
-
-  //   uint8_t v = atoi(line_buffer);
-
-  //   return v;
-  // }
-
-  // uint8_t Adafruit_Soundboard::volDown() {
-  //   while (stream->available())
-  //     stream->read();
-
-  //   stream->println("-");
-  //   readLine();
-  //   //Serial.println(line_buffer);
-
-  //   uint8_t v = atoi(line_buffer);
-
-  //   return v;
-  // }
-
-  bool audioPlayTrack(uint8_t n) {
-    // gpsSerial.end();
+  void audioPlayTrack(uint8_t n) {
     audioSerial.listen();
 
     while (audioSerial.available()) audioSerial.read();
@@ -60,37 +32,13 @@ native do
     audioReadLine();
 
     gpsSerial.listen();
-
-    if (strstr(line_buffer, "play") == 0) {
-      return false;
-    }
-
-    int playing = atoi(line_buffer+5);
-
-    #ifdef DEBUG
-    // _radioSendMessage("[audio] played #: %s", 1, playing);
-    #endif
-
-    if (n != playing) return false;
-    return true;
   }
 
 end
 
+_audioSerial.begin(9600);
 
-loop do
-  _audioSerial.begin(9600);
-
-  _Serial.println("GO 1");
-  // var int distanceTier;
-  // var bool movingAway;
-  // (distanceTier, movingAway) = await audio_distance_tier_change;
-  // _track = "a" + distanceTier + ".ogg";
-  // _Serial.print("XXXX: ");
-  // _Serial.println(track);
-
-  _audioPlayTrack(0);
-
-  _Serial.println("GO 3");
+loop i in 10 do
+  _audioPlayTrack(i+1);
   await 1s;
 end

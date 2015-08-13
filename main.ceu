@@ -6,7 +6,7 @@
 #define MY_FUNCHKIN_ID 1
 #define MAX_FRIENDS 1
 #define USE_SERIAL
-#define DEBUG
+// #define DEBUG
 
 // My location and heading
 var float latitude, longitude;
@@ -128,10 +128,10 @@ with
     loop do
       await 1s;
 
-      _radioSendMessage("[me] location: %d, %d", 2, (int) latitude, (int) longitude);
+      _radioSendMessage(F("[me] location: %d, %d"), 2, (int) latitude, (int) longitude);
 
       loop i in MAX_FRIENDS do
-        _radioSendMessage("[friend %d] bearing: %d, distance: %lu, direction: %d", 4,
+        _radioSendMessage(F("[friend %d] bearing: %d, distance: %lu, direction: %d"), 4,
           _friends[i].id, _friends[i].bearing, _friends[i].distance, _friends[i].direction);
       end
     end

@@ -162,15 +162,6 @@ native do
       display.show();
     }
   }
-
-  void displayRadioRxTimeout() {
-    for (int i = 0; i < 5; ++i) { // blink 5 times
-      display.setPixelColor(lastDir, 0);
-      delay(200);
-      display.setPixelColor(lastDir, display.Color(dirLED.red, dirLED.green, dirLED.blue));
-    }
-  }
-
 end
 
 _displayBegin();

@@ -18,17 +18,4 @@ native do
       return bearing - heading + 360;
     }
   }
-
-  int humanizeDirection(int direction) {
-    if (direction > 345 || direction < 15) {
-      return 0; // forward
-    } else if (direction > 165 && direction < 195) {
-      return -2; // behind
-    } else if (direction < 180) {
-      return 1; // left
-    } else {
-      return -1; // right
-    }
-  }
-
 end
