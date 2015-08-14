@@ -18,14 +18,6 @@ native do
   SoftwareSerial audioSerial(11, 10);
   char line_buffer[LINE_BUFFER_SIZE];
 
-  int audioReadLine(void) {
-    int x = audioSerial.readBytesUntil('\n', line_buffer, LINE_BUFFER_SIZE);
-    line_buffer[x] = 0;
-
-    if (audioSerial.peek() == '\r') audioSerial.read();
-    return x;
-  }
-
   void audioPlayTrack(uint8_t n) {
     audioSerial.listen();
 
@@ -33,9 +25,6 @@ native do
     audioSerial.print("#"); audioSerial.println(n);
     audioSerial.print("#"); audioSerial.println(n);
     // audioSerial.print("P"); audioSerial.println("T07     WAV");
-    audioReadLine();
-    audioReadLine();
-
     gpsSerial.listen();
   }
 
