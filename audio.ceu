@@ -1,14 +1,3 @@
-/*
-5M (16'):             a5.ogg,  t5.ogg
-10M (33')             a10.ogg, t10.ogg
-20M (66')
-40M (132')
-80M (264')
-160M (528')
-320M (1056')
-640M (~ 0.5 mile)
-1.28KM (~ 1.0 mile)
-*/
 #define LINE_BUFFER_SIZE  20
 
 var int distanceTier, track;
