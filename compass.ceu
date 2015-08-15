@@ -14,8 +14,9 @@ native do
     compass.enableDefault();
 
     #if MY_FUNCHKIN_ID == 1
-      compass.m_min = (LSM303::vector<int16_t>){-1005,   -699,  -1196};
-      compass.m_max = (LSM303::vector<int16_t>){+142,   +385,   -122};
+      // min: {  -746,   -401,   -706}    max: {  +481,   +217,   +352}
+      compass.m_min = (LSM303::vector<int16_t>){-746,   -401,   -706};
+      compass.m_max = (LSM303::vector<int16_t>){+481,   +217,   +352};
     #endif
 
     #if MY_FUNCHKIN_ID == 2
@@ -32,6 +33,7 @@ loop do
 
   async do
     var int heading = _compass.heading();
+    _Serial.print("HEADING: "); _Serial.println(heading);
     emit COMPASS_HEADING => heading;
   end
 

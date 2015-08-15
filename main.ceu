@@ -3,10 +3,10 @@
 #include "course.ceu"
 #include "events.ceu"
 
-#define MY_FUNCHKIN_ID 2
+#define MY_FUNCHKIN_ID 1
 #define MAX_FRIENDS 1
 #define USE_SERIAL
-#define DEBUG
+// #define DEBUG
 #define SIMULATION
 
 // My location and heading

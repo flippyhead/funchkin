@@ -1,11 +1,8 @@
-#define LINE_BUFFER_SIZE  20
-
 var int distanceTier, track;
 var bool movingAway;
 
 native do
   SoftwareSerial audioSerial(11, 10);
-  char line_buffer[LINE_BUFFER_SIZE];
 
   void audioPlayTrack(uint8_t n) {
     audioSerial.listen();
@@ -13,7 +10,6 @@ native do
     while (audioSerial.available()) audioSerial.read();
     audioSerial.print("#"); audioSerial.println(n);
     audioSerial.print("#"); audioSerial.println(n);
-    // audioSerial.print("P"); audioSerial.println("T07     WAV");
     gpsSerial.listen();
   }
 
@@ -23,11 +19,14 @@ _audioSerial.begin(9600);
 
 loop do
   (distanceTier, movingAway) = await audio_distance_tier_change;
+
   track = distanceTier;
   if movingAway then
     track = track + 10;
   end
 
-  _Serial.print("PLAYING "); _Serial.println(track);
+  #ifdef DEBUG
+    _Serial.print("[audio] playing track: "); _Serial.println(track);
+  #endif
   _audioPlayTrack(track);
 end
