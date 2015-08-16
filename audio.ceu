@@ -17,6 +17,8 @@ end
 
 _audioSerial.begin(9600);
 
+_audioPlayTrack(0);
+
 loop do
   (distanceTier, movingAway) = await audio_distance_tier_change;
 

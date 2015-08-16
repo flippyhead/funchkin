@@ -1,13 +1,15 @@
+#define MY_FUNCHKIN_ID 1
+#define MAX_FRIENDS 1
+// #define CALIBRATE
+// #define USE_SERIAL
+// #define DEBUG
+// #define SIMULATION
+
 #include "arduino.ceu"
 #include "funchkin.ceu"
 #include "course.ceu"
 #include "events.ceu"
 
-#define MY_FUNCHKIN_ID 1
-#define MAX_FRIENDS 1
-#define USE_SERIAL
-// #define DEBUG
-#define SIMULATION
 
 // My location and heading
 var float latitude, longitude;
@@ -48,10 +50,8 @@ native do
   }
 
   int calculateDistanceTier(int distance) {
-    for (int i = 0; i < 9; ++i) {
-      if (distanceTiers[i] <= distance && distanceTiers[i+1] >= distance) {
-        return i;
-      }
+    for (int i = 0; i < 9; i++) {
+      if (distanceTiers[i] <= distance) return i;
     }
     return -1; // should never reach here
   }
@@ -78,7 +78,11 @@ end
 _begin();
 
 par do
-  #include "compass.ceu"
+  #ifdef CALIBRATE
+    #include "compass-calibration.ceu"
+  #else
+    #include "compass.ceu"
+  #endif
 with
   #include "radio.ceu"
 with

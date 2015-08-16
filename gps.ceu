@@ -54,7 +54,7 @@ with
     await 2s;
 
     #ifdef DEBUG
-      _radioSendMessage("[gps] age: %d", 2, _age);
+      _radioSendMessage("[gps] age: %d", 1, _age);
     #endif
 
     if _age > GPS_MAX_AGE then

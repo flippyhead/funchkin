@@ -1,6 +1,6 @@
 native _radioBegin();
 
-#define RADIO_RX_TIMEOUT 60 // seconds
+#define RADIO_RX_TIMEOUT 10 // seconds
 
 native do
   ##include <XBee.h>
