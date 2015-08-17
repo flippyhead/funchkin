@@ -14,8 +14,11 @@ native do
     compass.enableDefault();
 
     #if MY_FUNCHKIN_ID == 1
-      compass.m_min = (LSM303::vector<int16_t>){-921,   -705,  -1433};
-      compass.m_max = (LSM303::vector<int16_t>){+363,   +355,   -265};
+      // min: {  -913,   -800,  -1449}    max: {  +285,   +404,   -338}
+      // min: { -1106,   -873,  -1200}    max: {  +185,   +337,    -92}
+
+      compass.m_min = (LSM303::vector<int16_t>){-1106,   -873,  -1200};
+      compass.m_max = (LSM303::vector<int16_t>){+185,   +337,    -92};
     #endif
 
     #if MY_FUNCHKIN_ID == 2

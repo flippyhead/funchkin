@@ -9,7 +9,7 @@ native _displayBegin();
 #define DISPLAY_PADDING_BRIGHTNESS 50
 #define TOP_LED 1
 #define LED_OFFSET 0
-#define MAX_DISTANCE 2000 // meters; approx. 6 miles (size of BRC city limits) == 9656 meters
+#define MAX_DISTANCE 300 // meters; approx. 6 miles (size of BRC city limits) == 9656 meters
 #define STEPS 10
 
 var int distance;
