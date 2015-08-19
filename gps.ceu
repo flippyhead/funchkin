@@ -40,14 +40,37 @@ with
   loop do
     #ifdef SIMULATION
       await 5s;
+      async do
+        emit GPS => (47.613626, -122.308627); // start
+      end
+      await 15s;
+      async do
+        emit GPS => (47.613704, -122.308656); // 8 meters
+      end
+      await 15s;
+      async do
+        emit GPS => (47.613771, -122.308654); // 16 meters
+      end
+      await 15s;
+      async do
+        emit GPS => (47.613872, -122.308646); // 27 meters
+      end
+      await 15s;
+      async do
+        emit GPS => (47.614373, -122.308697); // 83 meters
+      end
+      await 15s;
+      async do
+        emit GPS => (47.615383, -122.308764); // 200 meters
+      end
     #else
       await gps_ready;
       _gps.f_get_position(&_latitude, &_longitude, &_age);
-    #endif
 
-    async do
-      emit GPS => (_latitude, _longitude);
-    end
+      async do
+        emit GPS => (_latitude, _longitude);
+      end
+    #endif
   end
 with
   loop do

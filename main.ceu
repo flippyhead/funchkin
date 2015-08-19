@@ -51,7 +51,8 @@ native do
 
   int calculateDistanceTier(int distance) {
     for (int i = 0; i < 9; i++) {
-      if (distanceTiers[i] <= distance) return i;
+      if (distanceTiers[i] <= distance) continue;
+      if (distanceTiers[i] >= distance) return i;
     }
     return -1; // should never reach here
   }
@@ -119,8 +120,7 @@ with
     end
 
     async do
-      var int fdistance = _friends[0].distance;
-      emit DISPLAY_DISTANCE => fdistance;
+      emit DISPLAY_DISTANCE => _friends[0].distance;
     end
   end
 with
