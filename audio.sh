@@ -74,4 +74,5 @@ sox ./audio/tmp/T20.wav -b 16 ./audio/T20.wav
 say -v Alex -o ./audio/tmp/T21.wav --data-format=LEF32@16000 "Other."
 sox ./audio/tmp/T21.wav -b 16 ./audio/T21.wav
 
+# Tear down
 rm -rf ./audio/tmp
