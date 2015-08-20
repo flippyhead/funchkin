@@ -1,4 +1,4 @@
-#define MY_FUNCHKIN_ID 1
+#define MY_FUNCHKIN_ID 2
 #define MAX_FRIENDS 1
 // #define CALIBRATE
 // #define USE_SERIAL
